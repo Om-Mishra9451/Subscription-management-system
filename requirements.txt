@@ -1,0 +1,2 @@
+# SubscriptIQ Production Dependencies for Vercel Serverless
+python-dotenv>=1.0.0
