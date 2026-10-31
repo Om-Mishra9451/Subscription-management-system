@@ -2894,7 +2894,7 @@ HTML_PAGE = """<!DOCTYPE html>
         function autoFillInvoiceResidual() {
             const select = document.getElementById('pay-inv-id');
             const selectedText = select.options[select.selectedIndex].text;
-            const match = selectedText.match(/Due:\s*₹([0-9.,]+)/);
+            const match = selectedText.match(/Due:\\s*₹([0-9.,]+)/);
             if (match) {
                 document.getElementById('pay-amount').value = parseFloat(match[1].replace(/,/g, ''));
             }
@@ -3289,9 +3289,22 @@ class MasterServerHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def get_path_and_query(self):
-        raw = self.headers.get('x-matched-path') or self.headers.get('x-forwarded-uri') or self.headers.get('x-real-path')
+        parsed_self = urllib.parse.urlparse(self.path)
+        qs_self = urllib.parse.parse_qs(parsed_self.query, keep_blank_values=True)
+        if '__path' in qs_self:
+            val = qs_self['__path'][0].strip()
+            path = '/' + val.lstrip('/') if val else '/'
+            # remove __path from query string
+            filtered_qs = urllib.parse.urlencode([(k, v) for k, vs in qs_self.items() if k != '__path' for v in vs])
+            return path, filtered_qs
+
+        raw = self.headers.get('x-invoke-path') or self.headers.get('x-forwarded-uri') or self.headers.get('x-real-path')
         if not raw:
-            raw = self.path
+            matched = self.headers.get('x-matched-path')
+            if matched and matched not in ['/api/index.py', '/api/index', '/api']:
+                raw = matched
+            else:
+                raw = self.path
         parsed = urllib.parse.urlparse(raw)
         path = parsed.path
         if path in ['/api/index.py', '/api/index', '/api']:
