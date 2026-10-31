@@ -14,6 +14,12 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
 from datetime import datetime, date, timedelta
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # Ensure local module path is included
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -26,7 +32,6 @@ from subscriptiq.services.payment_matcher import PaymentMatcherEngine
 from subscriptiq.services.ai.provider_manager import AIProviderManager
 
 # Global state
-GLOBAL_ENV = Environment()
 GLOBAL_ENV = Environment()
 AI_MANAGER = None
 

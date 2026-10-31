@@ -26,8 +26,8 @@ class OpenRouterProvider(BaseAIProvider):
     def _validate_free_model_safety(self):
         """Ensures that only zero-cost models are invoked when free_only is set."""
         if self.free_only and self.model:
-            # OpenRouter free tier models are tagged with ':free'
-            if not self.model.endswith(':free'):
+            # OpenRouter free tier models are tagged with ':free' or 'openrouter/free'
+            if not (self.model.endswith(':free') or self.model == 'openrouter/free'):
                 _logger.warning("Configured OpenRouter model '%s' does not have ':free' suffix. Enforcing free tier safety.", self.model)
 
     @property
@@ -49,8 +49,8 @@ class OpenRouterProvider(BaseAIProvider):
             raise ValueError("OpenRouter API key or model is not configured.")
 
         # Hard safety enforcement against paid models
-        target_model = self.model or "meta-llama/llama-3.3-70b-instruct:free"
-        if self.free_only and not target_model.endswith(':free'):
+        target_model = self.model or "openrouter/free"
+        if self.free_only and not (target_model.endswith(':free') or target_model == 'openrouter/free'):
             raise ValueError(f"OpenRouter model '{target_model}' rejected: OPENROUTER_FREE_MODELS_ONLY is enabled.")
 
         headers = {
