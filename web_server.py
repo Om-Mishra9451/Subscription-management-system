@@ -293,6 +293,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <span class="tagline">Autonomous Revenue Assurance Engine for Odoo</span>
         </div>
         <div class="nav-actions">
+            <button class="btn btn-outline btn-sm" onclick="toggleDbExplorer()">🗄️ Database Tables</button>
             <span class="status-pill"><span class="status-dot"></span> Guardian Engine Active</span>
             <span style="font-size:0.85rem; color:var(--gray-600); font-weight:500;">Brightloop Software Corp</span>
         </div>
@@ -562,10 +563,78 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             chat.scrollTop = chat.scrollHeight;
         }
 
+        let CACHED_DB = null;
+        async function toggleDbExplorer() {
+            const modal = document.getElementById('db-modal');
+            if (modal.style.display === 'flex') {
+                modal.style.display = 'none';
+                return;
+            }
+            modal.style.display = 'flex';
+            document.getElementById('db-table-content').innerHTML = '<div style="padding:2rem; text-align:center;">Fetching database tables from backend...</div>';
+            const res = await fetch('/api/db');
+            CACHED_DB = await res.json();
+            renderDbTabs();
+        }
+
+        function renderDbTabs() {
+            const tabsDiv = document.getElementById('db-tabs');
+            tabsDiv.innerHTML = '';
+            const tables = Object.keys(CACHED_DB);
+            if (!tables.length) return;
+            tables.forEach((tbl, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-outline btn-sm';
+                btn.innerText = `${tbl} (${CACHED_DB[tbl].length})`;
+                btn.onclick = () => showTableRows(tbl);
+                tabsDiv.appendChild(btn);
+            });
+            showTableRows(tables[0]);
+        }
+
+        function showTableRows(tblName) {
+            const rows = CACHED_DB[tblName] || [];
+            const container = document.getElementById('db-table-content');
+            if (!rows.length) {
+                container.innerHTML = `<div style="padding:2rem; text-align:center; color:#64748b;">Table <code>${tblName}</code> is currently empty.</div>`;
+                return;
+            }
+            const cols = Object.keys(rows[0]);
+            let html = `<h4 style="margin-bottom:0.75rem; color:#1e293b;">Table: <code style="color:#4f46e5;">${tblName}</code> (${rows.length} rows)</h4>`;
+            html += '<div style="overflow-x:auto; background:white; border-radius:8px; border:1px solid #e2e8f0; max-height:60vh;"><table><thead><tr>';
+            cols.forEach(c => { html += `<th>${c}</th>`; });
+            html += '</tr></thead><tbody>';
+            rows.forEach(r => {
+                html += '<tr>';
+                cols.forEach(c => {
+                    let val = r[c] === null || r[c] === undefined ? '<span style="color:#cbd5e1">NULL</span>' : r[c];
+                    html += `<td style="font-size:0.8rem; font-family:monospace;">${val}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
         // Initialize polling and render
         fetchState();
         setInterval(fetchState, 5000);
     </script>
+
+    <!-- Database Explorer Modal -->
+    <div id="db-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:white; border-radius:12px; width:92%; max-width:1150px; max-height:85vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);">
+            <div style="padding:1rem 1.5rem; background:#1e293b; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="font-size:1.1rem; font-weight:700;">🗄️ SubscriptIQ Live Database Explorer</h3>
+                <button onclick="toggleDbExplorer()" style="background:none; border:none; color:white; font-size:1.25rem; cursor:pointer;">✕</button>
+            </div>
+            <div style="padding:0.75rem 1.5rem; background:#f1f5f9; display:flex; gap:0.5rem; overflow-x:auto; border-bottom:1px solid #cbd5e1;" id="db-tabs">
+            </div>
+            <div style="flex:1; padding:1.25rem; overflow-y:auto; background:#f8fafc;" id="db-table-content">
+                Loading database tables...
+            </div>
+        </div>
+    </div>
 </body>
 </html>
 """
@@ -628,6 +697,31 @@ class SubscriptIQHandler(BaseHTTPRequestHandler):
                 'cases': cases,
                 'audit_events': audit_events
             })
+        elif path == '/api/db':
+            tables = {}
+            for model_name in ['subscriptiq.risk.case', 'sale.order', 'account.move', 'subscriptiq.audit.event', 'subscriptiq.billing.guard', 'subscriptiq.plan', 'res.partner', 'res.company']:
+                rows = []
+                if model_name in GLOBAL_ENV:
+                    for rec in GLOBAL_ENV[model_name].search([]):
+                        row_dict = {}
+                        raw_dict = rec._records[0].__dict__ if rec._records else {}
+                        for k, v in raw_dict.items():
+                            if k.startswith('_'): continue
+                            if hasattr(v, 'name'):
+                                row_dict[k] = v.name
+                            elif hasattr(v, 'id'):
+                                row_dict[k] = v.id
+                            elif isinstance(v, (datetime, date)):
+                                row_dict[k] = str(v)
+                            elif isinstance(v, Decimal):
+                                row_dict[k] = float(v)
+                            elif isinstance(v, (int, float, str, bool)) or v is None:
+                                row_dict[k] = v
+                            else:
+                                row_dict[k] = str(v)
+                        rows.append(row_dict)
+                tables[model_name] = rows
+            self.send_json(tables)
         else:
             self.send_response(404)
             self.end_headers()
