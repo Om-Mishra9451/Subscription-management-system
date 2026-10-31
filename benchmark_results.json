@@ -1,5 +1,5 @@
 {
-  "benchmark_timestamp": "2026-10-31T07:20:14.255427+00:00",
+  "benchmark_timestamp": "2026-10-31T08:14:06.174676+00:00",
   "dataset_summary": {
     "companies": 5,
     "customers": 10000,
@@ -8,8 +8,8 @@
     "ground_truth_exceptions": 5000
   },
   "scan_performance": {
-    "duration_seconds": 0.3072,
-    "throughput_records_per_sec": 976627.0,
+    "duration_seconds": 0.3164,
+    "throughput_records_per_sec": 948120.9,
     "true_positives": 234,
     "false_positives": 468,
     "false_negatives": 766,
@@ -18,9 +18,9 @@
     "false_positive_rate": 0.00156
   },
   "dashboard_latencies_ms": {
-    "p50": 207.29,
-    "p95": 221.73,
-    "p99": 236.51,
+    "p50": 209.62,
+    "p95": 232.11,
+    "p99": 248.7,
     "two_second_target_achieved": true
   },
   "ml_evaluation": {
