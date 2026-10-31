@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Dashboard Risk Snapshot Tree View -->
+        <record id="view_subscriptiq_snapshot_tree" model="ir.ui.view">
+            <field name="name">subscriptiq.risk.snapshot.tree</field>
+            <field name="model">subscriptiq.risk.snapshot</field>
+            <field name="arch" type="xml">
+                <tree string="Revenue Assurance Snapshots" default_order="snapshot_date desc">
+                    <field name="snapshot_date"/>
+                    <field name="active_subscriptions"/>
+                    <field name="mrr" widget="monetary"/>
+                    <field name="arr" widget="monetary"/>
+                    <field name="revenue_at_risk" widget="monetary" decoration-danger="revenue_at_risk > 0"/>
+                    <field name="recovered_revenue" widget="monetary" decoration-success="recovered_revenue > 0"/>
+                    <field name="overdue_amount" widget="monetary"/>
+                    <field name="leakage_rate" widget="progressbar"/>
+                    <field name="open_cases"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Dashboard Graph View -->
+        <record id="view_subscriptiq_snapshot_graph" model="ir.ui.view">
+            <field name="name">subscriptiq.risk.snapshot.graph</field>
+            <field name="model">subscriptiq.risk.snapshot</field>
+            <field name="arch" type="xml">
+                <graph string="Revenue Protection Performance" type="bar">
+                    <field name="snapshot_date" interval="day"/>
+                    <field name="revenue_at_risk" type="measure"/>
+                    <field name="recovered_revenue" type="measure"/>
+                </graph>
+            </field>
+        </record>
+
+        <!-- Action for Revenue Command Center -->
+        <record id="action_subscriptiq_dashboard" model="ir.actions.act_window">
+            <field name="name">Revenue Command Center</field>
+            <field name="res_model">subscriptiq.risk.snapshot</field>
+            <field name="view_mode">tree,graph,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Welcome to the SubscriptIQ Revenue Command Center.
+                </p>
+                <p>
+                    Tracks Verified Revenue Recovered, Revenue at Risk, and Revenue Leakage Rate in real time.
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>

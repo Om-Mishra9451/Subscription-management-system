@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Sequence for Risk Cases -->
+        <record id="seq_subscriptiq_risk_case" model="ir.sequence">
+            <field name="name">SubscriptIQ Risk Case Sequence</field>
+            <field name="code">subscriptiq.risk.case</field>
+            <field name="prefix">RC-%(range_year)s-</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Sequence for Recovery Actions -->
+        <record id="seq_subscriptiq_action" model="ir.sequence">
+            <field name="name">SubscriptIQ Recovery Action Sequence</field>
+            <field name="code">subscriptiq.action</field>
+            <field name="prefix">ACT-%(range_year)s-</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Sequence for Scans -->
+        <record id="seq_subscriptiq_scan" model="ir.sequence">
+            <field name="name">SubscriptIQ Scan Sequence</field>
+            <field name="code">subscriptiq.scan</field>
+            <field name="prefix">SCAN-%(range_year)s-</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Payment Import Form View -->
+        <record id="view_subscriptiq_payment_import_form" model="ir.ui.view">
+            <field name="name">subscriptiq.payment.import.form</field>
+            <field name="model">subscriptiq.payment.import</field>
+            <field name="arch" type="xml">
+                <form string="Bank Statement Reconciliation Batch">
+                    <header>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,processing,completed,reconciled"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1><field name="name"/></h1>
+                        </div>
+                        <group>
+                            <group string="Batch Metadata">
+                                <field name="file_name"/>
+                                <field name="import_date"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                            <group string="Financial Summary">
+                                <field name="transaction_count"/>
+                                <field name="total_amount" widget="monetary"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Imported Transactions &amp; Matching Candidates">
+                                <field name="line_ids">
+                                    <tree decoration-success="state=='reconciled'" decoration-info="state=='matched'" decoration-warning="state=='unmatched'">
+                                        <field name="transaction_date"/>
+                                        <field name="external_transaction_id"/>
+                                        <field name="partner_name"/>
+                                        <field name="reference"/>
+                                        <field name="amount" widget="monetary"/>
+                                        <field name="state"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Payment Import Tree View -->
+        <record id="view_subscriptiq_payment_import_tree" model="ir.ui.view">
+            <field name="name">subscriptiq.payment.import.tree</field>
+            <field name="model">subscriptiq.payment.import</field>
+            <field name="arch" type="xml">
+                <tree string="Statement Batches" default_order="import_date desc">
+                    <field name="name"/>
+                    <field name="file_name"/>
+                    <field name="import_date"/>
+                    <field name="transaction_count"/>
+                    <field name="total_amount" widget="monetary"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Match Candidate Form View (Two-Panel Reconciliation Assistant) -->
+        <record id="view_subscriptiq_match_candidate_form" model="ir.ui.view">
+            <field name="name">subscriptiq.match.candidate.form</field>
+            <field name="model">subscriptiq.match.candidate</field>
+            <field name="arch" type="xml">
+                <form string="Reconciliation Candidate">
+                    <header>
+                        <button name="action_approve_reconciliation" string="Approve Reconciliation"
+                                type="object" class="btn-success"
+                                attrs="{'invisible': [('state', '!=', 'proposed')]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="proposed,reconciled"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group string="Bank Statement Transaction (Left Panel)">
+                                <field name="import_line_id" readonly="1"/>
+                            </group>
+                            <group string="Matched Customer Invoice (Right Panel)">
+                                <field name="invoice_id" readonly="1"/>
+                                <field name="confidence" widget="progressbar"/>
+                                <field name="confidence_level"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Matching Evidence &amp; Explanation">
+                                <field name="explanation" readonly="1"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action for Payment Reconciliation -->
+        <record id="action_subscriptiq_payment_import" model="ir.actions.act_window">
+            <field name="name">Smart Payment Reconciliation</field>
+            <field name="res_model">subscriptiq.payment.import</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Upload a bank statement CSV to run automated payment reconciliation.
+                </p>
+                <p>
+                    SubscriptIQ matches transactions against customer invoices using reference, amount, customer name, and date proximity.
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>

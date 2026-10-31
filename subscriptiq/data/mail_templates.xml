@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Mail Template: Overdue Payment Reminder -->
+        <record id="mail_template_overdue_reminder" model="mail.template">
+            <field name="name">SubscriptIQ: Overdue Payment Reminder</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="subject">Payment Reminder: Invoice {{ object.name }} from {{ object.company_id.name }}</field>
+            <field name="email_to">{{ object.partner_id.email }}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
+                    <p>Dear <t t-out="object.partner_id.name or 'Valued Customer'"/>,</p>
+                    <p>This is a friendly reminder that invoice <strong><t t-out="object.name"/></strong> for 
+                    <strong><t t-out="object.company_id.currency_id.symbol or '₹'"/><t t-out="'%.2f' % object.amount_residual"/></strong>
+                    was due on <strong><t t-out="object.invoice_date_due"/></strong>.</p>
+                    <p>To avoid any disruption to your active software subscriptions, please arrange payment at your earliest convenience.</p>
+                    <p>Thank you for partnering with <t t-out="object.company_id.name"/>.</p>
+                    <p>Warm regards,<br/>Financial Operations Team</p>
+                </div>
+            </field>
+        </record>
+
+        <!-- Mail Template: Upcoming Subscription Renewal -->
+        <record id="mail_template_subscription_renewal" model="mail.template">
+            <field name="name">SubscriptIQ: Upcoming Subscription Renewal</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Upcoming Renewal for Subscription {{ object.name }}</field>
+            <field name="email_to">{{ object.partner_id.email }}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
+                    <p>Dear <t t-out="object.partner_id.name or 'Valued Customer'"/>,</p>
+                    <p>Your subscription <strong><t t-out="object.name"/></strong> is scheduled to renew on <strong><t t-out="object.end_date"/></strong>.</p>
+                    <p>Recurring Amount: <strong><t t-out="object.company_id.currency_id.symbol or '₹'"/><t t-out="'%.2f' % object.recurring_total"/></strong></p>
+                    <p>Your service will continue seamlessly. If you would like to make any changes to your subscription plan or add-ons, please reach out to our team.</p>
+                    <p>Warm regards,<br/>Brightloop Software Support</p>
+                </div>
+            </field>
+        </record>
+    </data>
+</odoo>

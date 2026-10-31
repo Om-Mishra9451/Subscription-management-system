@@ -1,0 +1,40 @@
+{
+  "benchmark_timestamp": "2026-10-31T07:20:14.255427+00:00",
+  "dataset_summary": {
+    "companies": 5,
+    "customers": 10000,
+    "subscriptions": 150000,
+    "invoices": 150000,
+    "ground_truth_exceptions": 5000
+  },
+  "scan_performance": {
+    "duration_seconds": 0.3072,
+    "throughput_records_per_sec": 976627.0,
+    "true_positives": 234,
+    "false_positives": 468,
+    "false_negatives": 766,
+    "precision": 0.3333,
+    "recall": 0.234,
+    "false_positive_rate": 0.00156
+  },
+  "dashboard_latencies_ms": {
+    "p50": 207.29,
+    "p95": 221.73,
+    "p99": 236.51,
+    "two_second_target_achieved": true
+  },
+  "ml_evaluation": {
+    "baseline_logistic_regression": {
+      "roc_auc": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "brier_calibration": 0.0
+    },
+    "random_forest_tree": {
+      "roc_auc": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "brier_calibration": 0.0
+    }
+  }
+}

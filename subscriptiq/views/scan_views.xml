@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Scan Tree View -->
+        <record id="view_subscriptiq_scan_tree" model="ir.ui.view">
+            <field name="name">subscriptiq.scan.tree</field>
+            <field name="model">subscriptiq.scan</field>
+            <field name="arch" type="xml">
+                <tree string="Guardian Scans" default_order="create_date desc"
+                      decoration-success="state=='completed'"
+                      decoration-warning="state=='warning'"
+                      decoration-danger="state=='failed'">
+                    <field name="name"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                    <field name="start_time"/>
+                    <field name="end_time"/>
+                    <field name="records_scanned"/>
+                    <field name="cases_found"/>
+                    <field name="error_count"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Scan Form View -->
+        <record id="view_subscriptiq_scan_form" model="ir.ui.view">
+            <field name="name">subscriptiq.scan.form</field>
+            <field name="model">subscriptiq.scan</field>
+            <field name="arch" type="xml">
+                <form string="Guardian Inspection Scan">
+                    <header>
+                        <button name="action_execute_scan" string="Run Inspection Scan Now"
+                                type="object" class="btn-primary"
+                                attrs="{'invisible': [('state', 'in', ['in_progress', 'completed'])]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,completed"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1><field name="name"/></h1>
+                        </div>
+                        <group>
+                            <group string="Execution Metrics">
+                                <field name="company_id" groups="base.group_multi_company"/>
+                                <field name="start_time" readonly="1"/>
+                                <field name="end_time" readonly="1"/>
+                                <field name="ruleset_version" readonly="1"/>
+                            </group>
+                            <group string="Results">
+                                <field name="records_scanned" readonly="1"/>
+                                <field name="cases_found" readonly="1"/>
+                                <field name="error_count" readonly="1"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action for Scans -->
+        <record id="action_subscriptiq_scans" model="ir.actions.act_window">
+            <field name="name">Guardian Scans</field>
+            <field name="res_model">subscriptiq.scan</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+    </data>
+</odoo>

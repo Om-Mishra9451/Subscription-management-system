@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Top Level Application Menu -->
+        <menuitem id="menu_subscriptiq_root"
+                  name="SubscriptIQ"
+                  web_icon="subscriptiq,static/description/icon.png"
+                  sequence="10"/>
+
+        <!-- Main Categories -->
+        <menuitem id="menu_subscriptiq_revenue" name="Revenue Assurance" parent="menu_subscriptiq_root" sequence="10"/>
+        <menuitem id="menu_subscriptiq_subscriptions" name="Subscriptions &amp; Billing" parent="menu_subscriptiq_root" sequence="20"/>
+        <menuitem id="menu_subscriptiq_intelligence" name="AI &amp; Lab" parent="menu_subscriptiq_root" sequence="30"/>
+        <menuitem id="menu_subscriptiq_configuration" name="Configuration" parent="menu_subscriptiq_root" sequence="40"/>
+
+        <!-- 1. Revenue Command Center -->
+        <menuitem id="menu_subscriptiq_command_center"
+                  name="Command Center"
+                  parent="menu_subscriptiq_revenue"
+                  action="action_subscriptiq_dashboard"
+                  sequence="10"/>
+
+        <!-- 2. Revenue Guardian -->
+        <menuitem id="menu_subscriptiq_guardian"
+                  name="Revenue Guardian"
+                  parent="menu_subscriptiq_revenue"
+                  action="action_subscriptiq_risk_cases"
+                  sequence="20"/>
+
+        <!-- 3. Recovery Command Center -->
+        <menuitem id="menu_subscriptiq_recovery"
+                  name="Recovery Actions"
+                  parent="menu_subscriptiq_revenue"
+                  action="action_subscriptiq_actions"
+                  sequence="30"/>
+
+        <!-- 4. Payment Reconciliation -->
+        <menuitem id="menu_subscriptiq_payment_reconciliation"
+                  name="Smart Reconciliation"
+                  parent="menu_subscriptiq_revenue"
+                  action="action_subscriptiq_payment_import"
+                  sequence="40"/>
+
+        <!-- 5. Subscriptions -->
+        <menuitem id="menu_subscriptiq_subs"
+                  name="Active Subscriptions"
+                  parent="menu_subscriptiq_subscriptions"
+                  action="action_subscriptiq_subscriptions"
+                  sequence="10"/>
+
+        <!-- 6. Quotations -->
+        <menuitem id="menu_subscriptiq_quotes"
+                  name="Quotations"
+                  parent="menu_subscriptiq_subscriptions"
+                  action="action_subscriptiq_quotations"
+                  sequence="20"/>
+
+        <!-- 7. Invoices -->
+        <menuitem id="menu_subscriptiq_invoices"
+                  name="Recurring Invoices"
+                  parent="menu_subscriptiq_subscriptions"
+                  action="action_subscriptiq_invoices"
+                  sequence="30"/>
+
+        <!-- 8. Plans & Discounts -->
+        <menuitem id="menu_subscriptiq_plans"
+                  name="Subscription Plans"
+                  parent="menu_subscriptiq_subscriptions"
+                  action="action_subscriptiq_plans"
+                  sequence="40"/>
+
+        <menuitem id="menu_subscriptiq_discounts"
+                  name="Discount Rules"
+                  parent="menu_subscriptiq_subscriptions"
+                  action="action_subscriptiq_discounts"
+                  sequence="50"/>
+
+        <!-- 9. AI Copilot -->
+        <menuitem id="menu_subscriptiq_copilot"
+                  name="AI Finance Copilot"
+                  parent="menu_subscriptiq_intelligence"
+                  action="action_subscriptiq_copilot_log"
+                  sequence="10"/>
+
+        <!-- 10. Benchmark Laboratory -->
+        <menuitem id="menu_subscriptiq_benchmark"
+                  name="Benchmark Laboratory"
+                  parent="menu_subscriptiq_intelligence"
+                  action="action_subscriptiq_ml_models"
+                  sequence="20"/>
+
+        <!-- 11. Audit and Compliance -->
+        <menuitem id="menu_subscriptiq_audit"
+                  name="Audit &amp; Compliance"
+                  parent="menu_subscriptiq_intelligence"
+                  action="action_subscriptiq_audit_events"
+                  sequence="30"/>
+
+        <!-- 12. Inspection Scans -->
+        <menuitem id="menu_subscriptiq_scans"
+                  name="Guardian Scans"
+                  parent="menu_subscriptiq_configuration"
+                  action="action_subscriptiq_scans"
+                  sequence="10"/>
+
+        <!-- 13. Detection Rules & Settings -->
+        <menuitem id="menu_subscriptiq_rules"
+                  name="Detection Rules"
+                  parent="menu_subscriptiq_configuration"
+                  action="action_subscriptiq_rules"
+                  sequence="20"/>
+
+        <menuitem id="menu_subscriptiq_settings"
+                  name="Settings"
+                  parent="menu_subscriptiq_configuration"
+                  action="action_subscriptiq_settings"
+                  sequence="30"/>
+    </data>
+</odoo>

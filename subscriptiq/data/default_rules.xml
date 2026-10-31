@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default Rules for Revenue Guardian -->
+        <record id="rule_overdue_invoice_default" model="subscriptiq.rule">
+            <field name="name">Overdue Customer Invoices</field>
+            <field name="code">OVERDUE_INVOICE</field>
+            <field name="rule_type">overdue</field>
+            <field name="severity">high</field>
+            <field name="threshold">1.0</field>
+            <field name="enabled">True</field>
+            <field name="version">1.0</field>
+            <field name="condition_config">{"days_overdue_min": 1, "check_residual": true}</field>
+        </record>
+
+        <record id="rule_expiring_subscription_default" model="subscriptiq.rule">
+            <field name="name">Upcoming Subscription Expiry</field>
+            <field name="code">EXPIRING_SUBSCRIPTION</field>
+            <field name="rule_type">expiration</field>
+            <field name="severity">medium</field>
+            <field name="threshold">14.0</field>
+            <field name="enabled">True</field>
+            <field name="version">1.0</field>
+            <field name="condition_config">{"warning_days": 14, "target_stage": "in_progress"}</field>
+        </record>
+
+        <record id="rule_expired_discount_default" model="subscriptiq.rule">
+            <field name="name">Expired or Exhausted Discount Applications</field>
+            <field name="code">EXPIRED_DISCOUNT</field>
+            <field name="rule_type">discount</field>
+            <field name="severity">critical</field>
+            <field name="threshold">0.0</field>
+            <field name="enabled">True</field>
+            <field name="version">1.0</field>
+            <field name="condition_config">{"block_billing": true, "check_limits": true}</field>
+        </record>
+
+        <record id="rule_unmatched_payment_default" model="subscriptiq.rule">
+            <field name="name">Unmatched Bank Transactions</field>
+            <field name="code">UNMATCHED_PAYMENT</field>
+            <field name="rule_type">unmatched</field>
+            <field name="severity">medium</field>
+            <field name="threshold">3.0</field>
+            <field name="enabled">True</field>
+            <field name="version">1.0</field>
+            <field name="condition_config">{"age_days": 3, "min_amount": 100.0}</field>
+        </record>
+
+        <record id="rule_duplicate_billing_default" model="subscriptiq.rule">
+            <field name="name">Duplicate Subscription Billing Guard</field>
+            <field name="code">DUPLICATE_BILLING</field>
+            <field name="rule_type">duplicate</field>
+            <field name="severity">critical</field>
+            <field name="threshold">0.0</field>
+            <field name="enabled">True</field>
+            <field name="version">1.0</field>
+            <field name="condition_config">{"enforce_reservation": true, "lock_transaction": true}</field>
+        </record>
+
+        <record id="rule_failed_payment_default" model="subscriptiq.rule">
+            <field name="name">Failed Payment Attempts</field>
+            <field name="code">FAILED_PAYMENT</field>
+            <field name="rule_type">failed_payment</field>
+            <field name="severity">high</field>
+            <field name="threshold">1.0</field>
+            <field name="enabled">True</field>
+            <field name="version">1.0</field>
+            <field name="condition_config">{"check_states": ["error", "cancel", "failed"]}</field>
+        </record>
+    </data>
+</odoo>

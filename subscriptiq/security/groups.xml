@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- SubscriptIQ Security Category -->
+        <record id="module_category_subscriptiq" model="ir.module.category">
+            <field name="name">SubscriptIQ Revenue Assurance</field>
+            <field name="description">Role-based access permissions for revenue assurance and protection.</field>
+            <field name="sequence">25</field>
+        </record>
+
+        <!-- 1. Viewer Role -->
+        <record id="group_subscriptiq_viewer" model="res.groups">
+            <field name="name">Viewer</field>
+            <field name="category_id" ref="module_category_subscriptiq"/>
+            <field name="comment">Read-only access to Revenue Command Center and high-level reports.</field>
+        </record>
+
+        <!-- 2. Analyst Role -->
+        <record id="group_subscriptiq_analyst" model="res.groups">
+            <field name="name">Analyst</field>
+            <field name="category_id" ref="module_category_subscriptiq"/>
+            <field name="implied_ids" eval="[(4, ref('group_subscriptiq_viewer'))]"/>
+            <field name="comment">Investigate risk cases, inspect evidence, propose recovery actions.</field>
+        </record>
+
+        <!-- 3. Operator Role -->
+        <record id="group_subscriptiq_operator" model="res.groups">
+            <field name="name">Operator</field>
+            <field name="category_id" ref="module_category_subscriptiq"/>
+            <field name="implied_ids" eval="[(4, ref('group_subscriptiq_analyst'))]"/>
+            <field name="comment">Execute pre-authorized safe recovery actions and review matched transactions.</field>
+        </record>
+
+        <!-- 4. Manager Role -->
+        <record id="group_subscriptiq_manager" model="res.groups">
+            <field name="name">Manager</field>
+            <field name="category_id" ref="module_category_subscriptiq"/>
+            <field name="implied_ids" eval="[(4, ref('group_subscriptiq_operator'))]"/>
+            <field name="comment">Authorize sensitive financial actions (cancellations, write-offs, payment reconciliation).</field>
+        </record>
+
+        <!-- 5. Administrator Role -->
+        <record id="group_subscriptiq_admin" model="res.groups">
+            <field name="name">Administrator</field>
+            <field name="category_id" ref="module_category_subscriptiq"/>
+            <field name="implied_ids" eval="[(4, ref('group_subscriptiq_manager'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+            <field name="comment">Full administrative control over rules, models, company settings, and AI configurations.</field>
+        </record>
+    </data>
+</odoo>

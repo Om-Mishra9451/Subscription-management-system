@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Frontend Portal or Web Assets / Snippets -->
+        <template id="portal_my_subscriptions_subscriptiq" inherit_id="portal.portal_my_home" priority="40">
+            <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="title">Software Subscriptions</t>
+                    <t t-set="url" t-value="'/my/subscriptions'"/>
+                    <t t-set="placeholder_count" t-value="'subscription_count'"/>
+                </t>
+            </xpath>
+        </template>
+    </data>
+</odoo>

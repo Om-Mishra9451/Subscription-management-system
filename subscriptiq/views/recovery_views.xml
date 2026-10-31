@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Recovery Action Form View -->
+        <record id="view_subscriptiq_action_form" model="ir.ui.view">
+            <field name="name">subscriptiq.action.form</field>
+            <field name="model">subscriptiq.action</field>
+            <field name="arch" type="xml">
+                <form string="Recovery Workflow Operation">
+                    <header>
+                        <button name="action_approve" string="Authorize &amp; Execute" type="object"
+                                class="btn-primary" groups="subscriptiq.group_subscriptiq_manager"
+                                attrs="{'invisible': [('state', '!=', 'awaiting_approval')]}"/>
+                        <button name="action_reject" string="Reject Action" type="object"
+                                class="btn-danger" groups="subscriptiq.group_subscriptiq_manager"
+                                attrs="{'invisible': [('state', '!=', 'awaiting_approval')]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="proposed,awaiting_approval,approved,completed"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1><field name="name"/></h1>
+                        </div>
+                        <group>
+                            <group string="Operation Details">
+                                <field name="action_type"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                                <field name="requested_by"/>
+                                <field name="approved_by" attrs="{'invisible': [('approved_by', '=', False)]}"/>
+                                <field name="approved_at" attrs="{'invisible': [('approved_at', '=', False)]}"/>
+                                <field name="executed_at" attrs="{'invisible': [('executed_at', '=', False)]}"/>
+                            </group>
+                            <group string="Idempotency &amp; Safety">
+                                <field name="idempotency_key" readonly="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Target Risk Cases">
+                                <field name="risk_case_ids">
+                                    <tree>
+                                        <field name="name"/>
+                                        <field name="partner_id"/>
+                                        <field name="amount_at_risk" widget="monetary"/>
+                                        <field name="severity"/>
+                                        <field name="state"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Payload &amp; Result">
+                                <group>
+                                    <field name="request_payload" readonly="1"/>
+                                    <field name="result" readonly="1"/>
+                                    <field name="error_message" attrs="{'invisible': [('error_message', '=', False)]}"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Recovery Action Tree View -->
+        <record id="view_subscriptiq_action_tree" model="ir.ui.view">
+            <field name="name">subscriptiq.action.tree</field>
+            <field name="model">subscriptiq.action</field>
+            <field name="arch" type="xml">
+                <tree string="Recovery Actions" default_order="create_date desc"
+                      decoration-info="state=='awaiting_approval'"
+                      decoration-success="state=='completed'"
+                      decoration-danger="state=='failed'">
+                    <field name="name"/>
+                    <field name="action_type"/>
+                    <field name="requested_by"/>
+                    <field name="state"/>
+                    <field name="approved_by"/>
+                    <field name="executed_at"/>
+                    <field name="idempotency_key"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Action for Recovery Operations -->
+        <record id="action_subscriptiq_actions" model="ir.actions.act_window">
+            <field name="name">Recovery Command Center</field>
+            <field name="res_model">subscriptiq.action</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No recovery operations pending.
+                </p>
+                <p>
+                    Safe automated reminders execute automatically; sensitive financial operations await dual authorization.
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>

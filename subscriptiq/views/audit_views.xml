@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Audit Event Tree View -->
+        <record id="view_subscriptiq_audit_tree" model="ir.ui.view">
+            <field name="name">subscriptiq.audit.event.tree</field>
+            <field name="model">subscriptiq.audit.event</field>
+            <field name="arch" type="xml">
+                <tree string="Cryptographic Audit Ledger" default_order="id desc" create="false" edit="false" delete="false">
+                    <field name="id"/>
+                    <field name="timestamp"/>
+                    <field name="event_code"/>
+                    <field name="actor_id"/>
+                    <field name="target_model"/>
+                    <field name="target_res_id"/>
+                    <field name="correlation_id"/>
+                    <field name="event_hash"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Audit Event Form View -->
+        <record id="view_subscriptiq_audit_form" model="ir.ui.view">
+            <field name="name">subscriptiq.audit.event.form</field>
+            <field name="model">subscriptiq.audit.event</field>
+            <field name="arch" type="xml">
+                <form string="Audit Event" create="false" edit="false" delete="false">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1><field name="event_code" readonly="1"/></h1>
+                        </div>
+                        <group>
+                            <group string="Actor &amp; Target">
+                                <field name="actor_id" readonly="1"/>
+                                <field name="timestamp" readonly="1"/>
+                                <field name="target_model" readonly="1"/>
+                                <field name="target_res_id" readonly="1"/>
+                                <field name="correlation_id" readonly="1"/>
+                            </group>
+                            <group string="Cryptographic Hash Chain">
+                                <field name="previous_hash" readonly="1"/>
+                                <field name="event_hash" readonly="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="State Delta (Before / After)">
+                                <group>
+                                    <field name="before_values" readonly="1"/>
+                                    <field name="after_values" readonly="1"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action for Audit Ledger -->
+        <record id="action_subscriptiq_audit_events" model="ir.actions.act_window">
+            <field name="name">Audit &amp; Compliance Ledger</field>
+            <field name="res_model">subscriptiq.audit.event</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+    </data>
+</odoo>

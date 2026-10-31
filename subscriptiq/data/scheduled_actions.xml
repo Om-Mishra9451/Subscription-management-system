@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Cron 1: Continuous Revenue Guardian Scan -->
+        <record id="ir_cron_subscriptiq_guardian_scan" model="ir.cron">
+            <field name="name">SubscriptIQ: Continuous Revenue Guardian Scan</field>
+            <field name="model_id" ref="model_subscriptiq_scan"/>
+            <field name="state">code</field>
+            <field name="code">model.env['subscriptiq.scan'].create({'name': 'Scheduled Guardian Scan'}).action_execute_scan()</field>
+            <field name="interval_number">15</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+            <field name="active">True</field>
+        </record>
+
+        <!-- Cron 2: Metric Snapshot Generator -->
+        <record id="ir_cron_subscriptiq_snapshot" model="ir.cron">
+            <field name="name">SubscriptIQ: Daily Revenue Metric Snapshot</field>
+            <field name="model_id" ref="model_subscriptiq_risk_snapshot"/>
+            <field name="state">code</field>
+            <field name="code">
+from subscriptiq.services.revenue_calculator import RevenueCalculator
+metrics = RevenueCalculator.compute_dashboard_metrics(model.env)
+model.env['subscriptiq.risk.snapshot'].create({
+    'company_id': model.env.company.id,
+    'snapshot_date': model.env['subscriptiq.risk.snapshot'].fields.Date.today(),
+    'active_subscriptions': metrics['active_subscriptions'],
+    'mrr': metrics['mrr'],
+    'arr': metrics['arr'],
+    'revenue_at_risk': metrics['revenue_at_risk'],
+    'recovered_revenue': metrics['verified_recovered_revenue'],
+    'overdue_amount': metrics['outstanding_amount'],
+    'open_cases': metrics['open_risk_cases_count'],
+    'leakage_rate': metrics['revenue_leakage_rate']
+})
+            </field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active">True</field>
+        </record>
+    </data>
+</odoo>

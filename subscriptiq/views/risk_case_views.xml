@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Risk Case Form View (Risk Investigation) -->
+        <record id="view_subscriptiq_risk_case_form" model="ir.ui.view">
+            <field name="name">subscriptiq.risk.case.form</field>
+            <field name="model">subscriptiq.risk.case</field>
+            <field name="arch" type="xml">
+                <form string="Risk Investigation">
+                    <header>
+                        <button name="action_investigate" string="Start Investigation" type="object"
+                                class="btn-primary" attrs="{'invisible': [('state', '!=', 'open')]}"/>
+                        <button name="action_dismiss" string="Dismiss / Accept Risk" type="object"
+                                class="btn-secondary" attrs="{'invisible': [('state', 'in', ['resolved', 'ignored'])]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="open,investigating,action_proposed,resolved"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1><field name="name"/></h1>
+                            <h3>
+                                <span class="badge badge-danger" attrs="{'invisible': [('severity', '!=', 'critical')]}">CRITICAL RISK</span>
+                                <span class="badge badge-warning" attrs="{'invisible': [('severity', '!=', 'high')]}">HIGH RISK</span>
+                                <span class="badge badge-info" attrs="{'invisible': [('severity', '!=', 'medium')]}">MEDIUM RISK</span>
+                                <span class="badge badge-secondary" attrs="{'invisible': [('severity', '!=', 'low')]}">LOW RISK</span>
+                            </h3>
+                        </div>
+                        <group>
+                            <group string="Financial Impact">
+                                <field name="amount_at_risk" widget="monetary"/>
+                                <field name="currency_id" invisible="1"/>
+                                <field name="risk_score" widget="progressbar"/>
+                                <field name="case_type"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                            <group string="Traceable Source Records">
+                                <field name="partner_id"/>
+                                <field name="subscription_id"/>
+                                <field name="invoice_id"/>
+                                <field name="payment_id"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Financial Explanation &amp; Evidence">
+                                <group>
+                                    <field name="explanation"/>
+                                    <field name="evidence"/>
+                                    <field name="recommended_action"/>
+                                </group>
+                            </page>
+                            <page string="Recovery &amp; Resolution">
+                                <group>
+                                    <field name="recovery_verified" readonly="1"/>
+                                    <field name="recovered_amount" widget="monetary" readonly="1"/>
+                                    <field name="resolved_at" readonly="1"/>
+                                    <field name="resolution_notes"/>
+                                </group>
+                            </page>
+                            <page string="System Fingerprint">
+                                <group>
+                                    <field name="fingerprint" readonly="1"/>
+                                    <field name="detected_at" readonly="1"/>
+                                    <field name="last_checked_at" readonly="1"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Risk Case Tree View (Revenue Guardian) -->
+        <record id="view_subscriptiq_risk_case_tree" model="ir.ui.view">
+            <field name="name">subscriptiq.risk.case.tree</field>
+            <field name="model">subscriptiq.risk.case</field>
+            <field name="arch" type="xml">
+                <tree string="Revenue Guardian Cases" default_order="risk_score desc, detected_at desc"
+                      decoration-danger="severity=='critical'"
+                      decoration-warning="severity=='high'"
+                      decoration-info="severity=='medium'">
+                    <field name="name"/>
+                    <field name="case_type"/>
+                    <field name="partner_id"/>
+                    <field name="amount_at_risk" widget="monetary" sum="Total Exposure"/>
+                    <field name="risk_score" widget="progressbar"/>
+                    <field name="severity"/>
+                    <field name="state"/>
+                    <field name="detected_at"/>
+                    <field name="recommended_action"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Risk Case Search View -->
+        <record id="view_subscriptiq_risk_case_search" model="ir.ui.view">
+            <field name="name">subscriptiq.risk.case.search</field>
+            <field name="model">subscriptiq.risk.case</field>
+            <field name="arch" type="xml">
+                <search string="Search Risk Cases">
+                    <field name="name"/>
+                    <field name="partner_id"/>
+                    <field name="invoice_id"/>
+                    <field name="subscription_id"/>
+                    <filter name="open" string="Open &amp; Investigating" domain="[('state', 'in', ['open', 'investigating', 'action_proposed'])]"/>
+                    <filter name="critical" string="Critical Severity" domain="[('severity', '=', 'critical')]"/>
+                    <filter name="high" string="High Severity" domain="[('severity', '=', 'high')]"/>
+                    <filter name="overdue" string="Overdue Invoices" domain="[('case_type', '=', 'overdue_invoice')]"/>
+                    <filter name="expiring" string="Expiring Subscriptions" domain="[('case_type', '=', 'expiring_subscription')]"/>
+                    <group expand="0" string="Group By">
+                        <filter name="group_by_severity" string="Severity" context="{'group_by': 'severity'}"/>
+                        <filter name="group_by_type" string="Category" context="{'group_by': 'case_type'}"/>
+                        <filter name="group_by_partner" string="Customer" context="{'group_by': 'partner_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Action for Revenue Guardian -->
+        <record id="action_subscriptiq_risk_cases" model="ir.actions.act_window">
+            <field name="name">Revenue Guardian</field>
+            <field name="res_model">subscriptiq.risk.case</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{'search_default_open': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Zero revenue risk exceptions detected!
+                </p>
+                <p>
+                    Revenue Guardian continuously inspects your subscriptions, invoices, and bank payments to detect leakage.
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>

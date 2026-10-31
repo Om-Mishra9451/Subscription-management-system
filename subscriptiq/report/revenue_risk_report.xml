@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="action_report_revenue_risk" model="ir.actions.report">
+            <field name="name">Executive Revenue Assurance Report</field>
+            <field name="model">subscriptiq.risk.snapshot</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">subscriptiq.report_revenue_risk_template</field>
+            <field name="report_file">subscriptiq.report_revenue_risk_template</field>
+            <field name="binding_model_id" ref="model_subscriptiq_risk_snapshot"/>
+            <field name="binding_type">report</field>
+        </record>
+    </data>
+</odoo>

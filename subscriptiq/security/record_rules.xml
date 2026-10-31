@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Multi-Company Record Rules -->
+        <record id="rule_subscriptiq_risk_case_company" model="ir.rule">
+            <field name="name">SubscriptIQ Risk Case Multi-Company</field>
+            <field name="model_id" ref="model_subscriptiq_risk_case"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_subscriptiq_action_company" model="ir.rule">
+            <field name="name">SubscriptIQ Action Multi-Company</field>
+            <field name="model_id" ref="model_subscriptiq_action"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_subscriptiq_billing_guard_company" model="ir.rule">
+            <field name="name">SubscriptIQ Billing Guard Multi-Company</field>
+            <field name="model_id" ref="model_subscriptiq_billing_guard"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_subscriptiq_payment_import_company" model="ir.rule">
+            <field name="name">SubscriptIQ Payment Import Multi-Company</field>
+            <field name="model_id" ref="model_subscriptiq_payment_import"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_subscriptiq_scan_company" model="ir.rule">
+            <field name="name">SubscriptIQ Scan Multi-Company</field>
+            <field name="model_id" ref="model_subscriptiq_scan"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_subscriptiq_audit_company" model="ir.rule">
+            <field name="name">SubscriptIQ Audit Event Multi-Company</field>
+            <field name="model_id" ref="model_subscriptiq_audit_event"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Customer Ownership Isolation: Portal customers can only access their own records -->
+        <record id="rule_customer_portal_subscriptions" model="ir.rule">
+            <field name="name">Customer Own Subscriptions Only</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="domain_force">[('partner_id', '=', user.partner_id.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="rule_customer_portal_invoices" model="ir.rule">
+            <field name="name">Customer Own Invoices Only</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="domain_force">[('partner_id', '=', user.partner_id.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+    </data>
+</odoo>

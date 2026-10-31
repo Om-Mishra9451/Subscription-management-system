@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Plan Tree & Form Views -->
+        <record id="view_subscriptiq_plan_tree" model="ir.ui.view">
+            <field name="name">subscriptiq.plan.tree</field>
+            <field name="model">subscriptiq.plan</field>
+            <field name="arch" type="xml">
+                <tree string="Subscription Plans">
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="billing_interval"/>
+                    <field name="price" widget="monetary"/>
+                    <field name="auto_close_policy"/>
+                    <field name="pause_policy"/>
+                    <field name="renewal_policy"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_subscriptiq_plan_form" model="ir.ui.view">
+            <field name="name">subscriptiq.plan.form</field>
+            <field name="model">subscriptiq.plan</field>
+            <field name="arch" type="xml">
+                <form string="Subscription Plan Definition">
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1><field name="name"/></h1>
+                        </div>
+                        <group>
+                            <group string="Billing &amp; Recurrence">
+                                <field name="code"/>
+                                <field name="price" widget="monetary"/>
+                                <field name="billing_interval"/>
+                                <field name="billing_interval_count"/>
+                                <field name="min_quantity"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                            <group string="Lifecycle Policies">
+                                <field name="renewal_policy"/>
+                                <field name="pause_policy"/>
+                                <field name="max_pause_days" attrs="{'invisible': [('pause_policy', '=', 'disallowed')]}"/>
+                                <field name="early_closure_policy"/>
+                                <field name="auto_close_policy"/>
+                                <field name="grace_period_days" attrs="{'invisible': [('auto_close_policy', '!=', 'grace_period')]}"/>
+                            </group>
+                        </group>
+                        <group string="Availability Schedule">
+                            <field name="availability_start_date"/>
+                            <field name="availability_end_date"/>
+                            <field name="active"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Discount Rule Tree & Form Views -->
+        <record id="view_subscriptiq_discount_tree" model="ir.ui.view">
+            <field name="name">subscriptiq.discount.rule.tree</field>
+            <field name="model">subscriptiq.discount.rule</field>
+            <field name="arch" type="xml">
+                <tree string="Promotional Discount Rules">
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="discount_type"/>
+                    <field name="discount_value"/>
+                    <field name="scope"/>
+                    <field name="usage_count"/>
+                    <field name="max_usage_limit"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_subscriptiq_discount_form" model="ir.ui.view">
+            <field name="name">subscriptiq.discount.rule.form</field>
+            <field name="model">subscriptiq.discount.rule</field>
+            <field name="arch" type="xml">
+                <form string="Discount Rule">
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1><field name="name"/></h1>
+                        </div>
+                        <group>
+                            <group string="Discount Formula">
+                                <field name="code"/>
+                                <field name="discount_type"/>
+                                <field name="discount_value"/>
+                                <field name="scope"/>
+                                <field name="min_purchase_amount"/>
+                                <field name="min_quantity"/>
+                            </group>
+                            <group string="Validity &amp; Usage Limits">
+                                <field name="start_date"/>
+                                <field name="end_date"/>
+                                <field name="max_usage_limit"/>
+                                <field name="usage_count" readonly="1"/>
+                                <field name="active"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Benchmark Laboratory (ML Models) Tree View -->
+        <record id="view_subscriptiq_ml_tree" model="ir.ui.view">
+            <field name="name">subscriptiq.ml.model.version.tree</field>
+            <field name="model">subscriptiq.ml.model.version</field>
+            <field name="arch" type="xml">
+                <tree string="Benchmark Models &amp; Algorithms">
+                    <field name="version"/>
+                    <field name="model_type"/>
+                    <field name="roc_auc"/>
+                    <field name="precision"/>
+                    <field name="recall"/>
+                    <field name="brier_score"/>
+                    <field name="dataset_size"/>
+                    <field name="activated"/>
+                    <field name="trained_at"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Copilot Logs Tree View -->
+        <record id="view_subscriptiq_copilot_log_tree" model="ir.ui.view">
+            <field name="name">subscriptiq.copilot.log.tree</field>
+            <field name="model">subscriptiq.copilot.log</field>
+            <field name="arch" type="xml">
+                <tree string="Copilot Conversations" default_order="timestamp desc">
+                    <field name="timestamp"/>
+                    <field name="user_id"/>
+                    <field name="query"/>
+                    <field name="provider"/>
+                    <field name="model"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Action Windows -->
+        <record id="action_subscriptiq_subscriptions" model="ir.actions.act_window">
+            <field name="name">Active Subscriptions</field>
+            <field name="res_model">sale.order</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('is_subscription', '=', True)]</field>
+        </record>
+
+        <record id="action_subscriptiq_quotations" model="ir.actions.act_window">
+            <field name="name">Subscription Quotations</field>
+            <field name="res_model">sale.order</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('is_subscription', '=', True), ('stage', 'in', ['draft', 'quotation'])]</field>
+        </record>
+
+        <record id="action_subscriptiq_invoices" model="ir.actions.act_window">
+            <field name="name">Recurring Invoices</field>
+            <field name="res_model">account.move</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('move_type', '=', 'out_invoice')]</field>
+        </record>
+
+        <record id="action_subscriptiq_plans" model="ir.actions.act_window">
+            <field name="name">Subscription Plans</field>
+            <field name="res_model">subscriptiq.plan</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record id="action_subscriptiq_discounts" model="ir.actions.act_window">
+            <field name="name">Discount Rules</field>
+            <field name="res_model">subscriptiq.discount.rule</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record id="action_subscriptiq_ml_models" model="ir.actions.act_window">
+            <field name="name">Benchmark Laboratory</field>
+            <field name="res_model">subscriptiq.ml.model.version</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record id="action_subscriptiq_copilot_log" model="ir.actions.act_window">
+            <field name="name">AI Finance Copilot</field>
+            <field name="res_model">subscriptiq.copilot.log</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record id="action_subscriptiq_settings" model="ir.actions.act_window">
+            <field name="name">Company Settings</field>
+            <field name="res_model">res.company</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+    </data>
+</odoo>
