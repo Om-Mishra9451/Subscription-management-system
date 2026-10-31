@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record model="ir.module.category" id="module_category_subscriptiq">
+        <field name="name">SubscriptIQ</field>
+        <field name="description">SubscriptIQ AI Revenue Assurance Layer</field>
+        <field name="sequence">25</field>
+    </record>
+
+    <record id="group_subscriptiq_user" model="res.groups">
+        <field name="name">Guardian User</field>
+        <field name="category_id" ref="module_category_subscriptiq"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="group_subscriptiq_manager" model="res.groups">
+        <field name="name">Guardian Manager</field>
+        <field name="category_id" ref="module_category_subscriptiq"/>
+        <field name="implied_ids" eval="[(4, ref('group_subscriptiq_user'))]"/>
+        <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+    </record>
+
+    <!-- Multi-company Record Rules -->
+    <record id="subscriptiq_scan_company_rule" model="ir.rule">
+        <field name="name">SubscriptIQ Scan Multi-Company</field>
+        <field name="model_id" ref="model_subscriptiq_guardian_scan"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="subscriptiq_risk_case_company_rule" model="ir.rule">
+        <field name="name">SubscriptIQ Risk Case Multi-Company</field>
+        <field name="model_id" ref="model_subscriptiq_guardian_risk_case"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="subscriptiq_billing_guard_company_rule" model="ir.rule">
+        <field name="name">SubscriptIQ Billing Guard Multi-Company</field>
+        <field name="model_id" ref="model_subscriptiq_billing_guard"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

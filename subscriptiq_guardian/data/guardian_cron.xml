@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Automated Revenue Assurance Scan Cron (Daily) -->
+    <record id="ir_cron_subscriptiq_revenue_scan" model="ir.cron">
+        <field name="name">SubscriptIQ: Automated Revenue Assurance Scan</field>
+        <field name="model_id" ref="model_subscriptiq_guardian_scan"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_execute_scheduled_scan()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+        <field name="user_id" ref="base.user_root"/>
+    </record>
+
+    <!-- Default sequence for Scans -->
+    <record id="seq_subscriptiq_scan" model="ir.sequence">
+        <field name="name">SubscriptIQ Guardian Scan Sequence</field>
+        <field name="code">subscriptiq.guardian.scan</field>
+        <field name="prefix">REV-SCAN-%(year)s%(month)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

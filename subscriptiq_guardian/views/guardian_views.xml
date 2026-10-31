@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ======================================================= -->
+    <!-- RISK CASES VIEWS                                        -->
+    <!-- ======================================================= -->
+
+    <record id="view_subscriptiq_risk_case_list" model="ir.ui.view">
+        <field name="name">subscriptiq.guardian.risk.case.list</field>
+        <field name="model">subscriptiq.guardian.risk.case</field>
+        <field name="arch" type="xml">
+            <list string="Risk Cases" decoration-danger="severity == 'critical'" decoration-warning="severity == 'high'" decoration-info="severity == 'medium'" decoration-muted="status in ('resolved', 'dismissed')">
+                <field name="name"/>
+                <field name="risk_type"/>
+                <field name="partner_id"/>
+                <field name="invoice_id"/>
+                <field name="financial_impact" sum="Total Exposure"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="severity" widget="badge" decoration-danger="severity == 'critical'" decoration-warning="severity == 'high'" decoration-info="severity == 'medium'" decoration-success="severity == 'low'"/>
+                <field name="status" widget="badge" decoration-primary="status == 'new'" decoration-warning="status == 'investigating'" decoration-success="status == 'resolved'" decoration-muted="status == 'dismissed'"/>
+                <field name="create_date" string="Detected At"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_subscriptiq_risk_case_form" model="ir.ui.view">
+        <field name="name">subscriptiq.guardian.risk.case.form</field>
+        <field name="model">subscriptiq.guardian.risk.case</field>
+        <field name="arch" type="xml">
+            <form string="Risk Case">
+                <header>
+                    <button name="action_investigate" string="Start Investigation" type="object" invisible="status != 'new'" class="btn-primary"/>
+                    <button name="action_resolve" string="Mark as Resolved" type="object" invisible="status not in ('new', 'investigating')" class="btn-success"/>
+                    <button name="action_dismiss" string="Dismiss Case" type="object" invisible="status not in ('new', 'investigating')" class="btn-secondary"/>
+                    <button name="action_reopen" string="Reopen Case" type="object" invisible="status not in ('resolved', 'dismissed')" class="btn-warning"/>
+                    <field name="status" widget="statusbar" statusbar_visible="new,investigating,resolved,dismissed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Risk Case Title"/>
+                        <h1><field name="name" readonly="status in ('resolved', 'dismissed')"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id" readonly="status in ('resolved', 'dismissed')"/>
+                            <field name="invoice_id" readonly="status in ('resolved', 'dismissed')"/>
+                            <field name="risk_type" readonly="status in ('resolved', 'dismissed')"/>
+                            <field name="severity" widget="priority" readonly="status in ('resolved', 'dismissed')"/>
+                        </group>
+                        <group>
+                            <field name="financial_impact" widget="monetary" readonly="status in ('resolved', 'dismissed')"/>
+                            <field name="currency_id" invisible="True"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="scan_id" readonly="True"/>
+                            <field name="assigned_user_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Detection &amp; Analysis" name="detection_analysis">
+                            <group string="Reason &amp; Metrics">
+                                <field name="reason" nolabel="1" readonly="status in ('resolved', 'dismissed')"/>
+                            </group>
+                            <group string="Recommended Corrective Action">
+                                <field name="recommended_action" nolabel="1"/>
+                            </group>
+                        </page>
+                        <page string="Resolution Notes" name="resolution">
+                            <field name="resolution_notes" placeholder="Log resolution outcome, root-cause notes, or reason for dismissal..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_subscriptiq_risk_case_search" model="ir.ui.view">
+        <field name="name">subscriptiq.guardian.risk.case.search</field>
+        <field name="model">subscriptiq.guardian.risk.case</field>
+        <field name="arch" type="xml">
+            <search string="Search Risk Cases">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="invoice_id"/>
+                <field name="risk_type"/>
+                <filter string="Open Cases" name="open_cases" domain="[('status', 'in', ['new', 'investigating'])]"/>
+                <filter string="Critical Severity" name="critical_severity" domain="[('severity', '=', 'critical')]"/>
+                <filter string="High Severity" name="high_severity" domain="[('severity', '=', 'high')]"/>
+                <separator/>
+                <filter string="Overdue Invoices" name="filter_overdue" domain="[('risk_type', '=', 'overdue_invoice')]"/>
+                <filter string="Discrepancies" name="filter_discrepancy" domain="[('risk_type', '=', 'amount_discrepancy')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Customer" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Severity" name="group_severity" context="{'group_by': 'severity'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                    <filter string="Risk Category" name="group_risk_type" context="{'group_by': 'risk_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ======================================================= -->
+    <!-- SCAN VIEWS                                              -->
+    <!-- ======================================================= -->
+
+    <record id="view_subscriptiq_scan_list" model="ir.ui.view">
+        <field name="name">subscriptiq.guardian.scan.list</field>
+        <field name="model">subscriptiq.guardian.scan</field>
+        <field name="arch" type="xml">
+            <list string="Revenue Scans" decoration-success="state == 'completed'" decoration-danger="state == 'failed'" decoration-warning="state == 'running'">
+                <field name="name"/>
+                <field name="scan_date"/>
+                <field name="scan_type" widget="badge"/>
+                <field name="user_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="risk_case_count"/>
+                <field name="total_exposure_amount" sum="Total Exposure"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="state" widget="badge" decoration-success="state == 'completed'" decoration-danger="state == 'failed'" decoration-warning="state == 'running'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_subscriptiq_scan_form" model="ir.ui.view">
+        <field name="name">subscriptiq.guardian.scan.form</field>
+        <field name="model">subscriptiq.guardian.scan</field>
+        <field name="arch" type="xml">
+            <form string="Revenue Audit Scan">
+                <header>
+                    <button name="action_execute_scan" string="Execute Audit Scan" type="object" class="btn-primary" invisible="state == 'running'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,running,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Scan Reference"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="scan_date"/>
+                            <field name="scan_type"/>
+                            <field name="user_id"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="risk_case_count"/>
+                            <field name="total_exposure_amount" widget="monetary"/>
+                            <field name="currency_id" invisible="True"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Detected Risk Cases" name="risk_cases">
+                            <field name="risk_case_ids" readonly="1">
+                                <list decoration-danger="severity == 'critical'" decoration-warning="severity == 'high'">
+                                    <field name="name"/>
+                                    <field name="partner_id"/>
+                                    <field name="invoice_id"/>
+                                    <field name="risk_type"/>
+                                    <field name="severity" widget="badge"/>
+                                    <field name="financial_impact"/>
+                                    <field name="status" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Execution Notes &amp; Logs" name="scan_logs">
+                            <field name="execution_notes" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ======================================================= -->
+    <!-- BILLING GUARD VIEWS                                     -->
+    <!-- ======================================================= -->
+
+    <record id="view_subscriptiq_billing_guard_list" model="ir.ui.view">
+        <field name="name">subscriptiq.billing.guard.list</field>
+        <field name="model">subscriptiq.billing.guard</field>
+        <field name="arch" type="xml">
+            <list string="Billing Guard Registry" decoration-success="state == 'invoiced'" decoration-info="state == 'reserved'" decoration-muted="state == 'cancelled'">
+                <field name="subscription_ref"/>
+                <field name="partner_id"/>
+                <field name="period_start"/>
+                <field name="period_end"/>
+                <field name="expected_amount"/>
+                <field name="invoice_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="state" widget="badge" decoration-success="state == 'invoiced'" decoration-info="state == 'reserved'" decoration-muted="state == 'cancelled'"/>
+                <field name="create_date" string="Reserved At"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_subscriptiq_billing_guard_form" model="ir.ui.view">
+        <field name="name">subscriptiq.billing.guard.form</field>
+        <field name="model">subscriptiq.billing.guard</field>
+        <field name="arch" type="xml">
+            <form string="Billing Guard Reservation">
+                <header>
+                    <button name="action_release_reservation" string="Release Reservation" type="object" invisible="state == 'cancelled'" class="btn-secondary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="reserved,invoiced,cancelled"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="subscription_ref" string="Subscription / Contract Reference"/>
+                        <h1><field name="subscription_ref" readonly="state != 'reserved'"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id" readonly="state != 'reserved'"/>
+                            <field name="period_start" readonly="state != 'reserved'"/>
+                            <field name="period_end" readonly="state != 'reserved'"/>
+                        </group>
+                        <group>
+                            <field name="expected_amount" widget="monetary" readonly="state != 'reserved'"/>
+                            <field name="currency_id" invisible="True"/>
+                            <field name="invoice_id" readonly="state == 'invoiced'"/>
+                            <field name="lock_token" readonly="True"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ======================================================= -->
+    <!-- ACTIONS & MENUS                                         -->
+    <!-- ======================================================= -->
+
+    <record id="action_subscriptiq_risk_case" model="ir.actions.act_window">
+        <field name="name">Risk Cases</field>
+        <field name="res_model">subscriptiq.guardian.risk.case</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_open_cases': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No active risk cases found.
+            </p>
+            <p>
+                Run a Revenue Guardian scan to audit invoices, discounts, and overdue balances.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_subscriptiq_scan" model="ir.actions.act_window">
+        <field name="name">Revenue Scans</field>
+        <field name="res_model">subscriptiq.guardian.scan</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Initiate your first Revenue Guardian Scan.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_subscriptiq_billing_guard" model="ir.actions.act_window">
+        <field name="name">Billing Guard Registry</field>
+        <field name="res_model">subscriptiq.billing.guard</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No billing reservations registered yet.
+            </p>
+        </field>
+    </record>
+
+    <!-- Root Menu -->
+    <menuitem id="menu_subscriptiq_root"
+              name="SubscriptIQ"
+              web_icon="subscriptiq_guardian,static/description/icon.png"
+              sequence="40"/>
+
+    <!-- Guardian Parent Menu -->
+    <menuitem id="menu_subscriptiq_guardian_sub"
+              name="Revenue Guardian"
+              parent="menu_subscriptiq_root"
+              sequence="10"/>
+
+    <!-- Child Menus -->
+    <menuitem id="menu_subscriptiq_risk_cases"
+              name="Risk Cases"
+              parent="menu_subscriptiq_guardian_sub"
+              action="action_subscriptiq_risk_case"
+              sequence="10"/>
+
+    <menuitem id="menu_subscriptiq_scans"
+              name="Revenue Scans"
+              parent="menu_subscriptiq_guardian_sub"
+              action="action_subscriptiq_scan"
+              sequence="20"/>
+
+    <menuitem id="menu_subscriptiq_billing_guard"
+              name="Duplicate Billing Guard"
+              parent="menu_subscriptiq_guardian_sub"
+              action="action_subscriptiq_billing_guard"
+              sequence="30"/>
+
+</odoo>

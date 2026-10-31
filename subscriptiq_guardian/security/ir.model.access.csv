@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_subscriptiq_rule_user,subscriptiq.guardian.rule.user,model_subscriptiq_guardian_rule,group_subscriptiq_user,1,0,0,0
+access_subscriptiq_rule_manager,subscriptiq.guardian.rule.manager,model_subscriptiq_guardian_rule,group_subscriptiq_manager,1,1,1,1
+access_subscriptiq_scan_user,subscriptiq.guardian.scan.user,model_subscriptiq_guardian_scan,group_subscriptiq_user,1,1,1,0
+access_subscriptiq_scan_manager,subscriptiq.guardian.scan.manager,model_subscriptiq_guardian_scan,group_subscriptiq_manager,1,1,1,1
+access_subscriptiq_risk_case_user,subscriptiq.guardian.risk.case.user,model_subscriptiq_guardian_risk_case,group_subscriptiq_user,1,1,1,0
+access_subscriptiq_risk_case_manager,subscriptiq.guardian.risk.case.manager,model_subscriptiq_guardian_risk_case,group_subscriptiq_manager,1,1,1,1
+access_subscriptiq_billing_guard_user,subscriptiq.billing.guard.user,model_subscriptiq_billing_guard,group_subscriptiq_user,1,1,1,0
+access_subscriptiq_billing_guard_manager,subscriptiq.billing.guard.manager,model_subscriptiq_billing_guard,group_subscriptiq_manager,1,1,1,1
