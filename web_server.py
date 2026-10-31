@@ -2596,17 +2596,43 @@ HTML_PAGE = """<!DOCTYPE html>
                 // =============================================================
                 // POPULATE ROLE DASHBOARD 2: STAFF LAYOUT DATA
                 // =============================================================
-                if (data.quotations) {
-                    setHtml('staff-quotations-tbody', data.quotations.map(q => `
+                if (data.subscriptions || data.quotations) {
+                    const allSubsQuotes = [
+                        ...(data.subscriptions || []).map(s => ({
+                            name: s.name,
+                            partner_name: s.partner_name,
+                            plan_name: s.plan_name,
+                            amount: s.recurring_total,
+                            renewal: s.next_renewal_date || 'N/A',
+                            status: s.status,
+                            actionHtml: (s.status === 'active' ? `
+                                <button class="btn btn-outline btn-sm" onclick="subscriptionAction(${s.id}, 'pause')">Pause</button>
+                                <button class="btn btn-outline btn-sm" onclick="subscriptionAction(${s.id}, 'close')">Close</button>
+                            ` : s.status === 'paused' ? `
+                                <button class="btn btn-outline btn-sm" onclick="subscriptionAction(${s.id}, 'resume')">Resume</button>
+                            ` : s.status === 'confirmed' ? `
+                                <button class="btn btn-success btn-sm" onclick="subscriptionAction(${s.id}, 'activate')">Activate</button>
+                            ` : 'Closed')
+                        })),
+                        ...(data.quotations || []).map(q => ({
+                            name: q.name,
+                            partner_name: q.partner_name,
+                            plan_name: q.plan_name,
+                            amount: q.total,
+                            renewal: 'Quotation Stage',
+                            status: q.status,
+                            actionHtml: `<button class="btn btn-primary btn-sm" onclick="quotationAction(${q.id}, 'convert')">Convert to Sub</button>`
+                        }))
+                    ];
+                    setHtml('staff-subs-tbody', allSubsQuotes.map(item => `
                         <tr>
-                            <td style="font-weight:600; font-family:'JetBrains Mono', monospace;">${q.name}</td>
-                            <td>${q.partner_name}</td>
-                            <td>${q.plan_name}</td>
-                            <td style="font-weight:700;">₹${Number(q.total).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                            <td><span class="badge badge-quotation">${q.status.toUpperCase()}</span></td>
-                            <td>
-                                <button class="btn btn-primary btn-sm" onclick="quotationAction(${q.id}, 'convert')">Convert to Subscription</button>
-                            </td>
+                            <td style="font-weight:700; font-family:'JetBrains Mono', monospace;">${item.name}</td>
+                            <td>${item.partner_name}</td>
+                            <td>${item.plan_name}</td>
+                            <td style="font-weight:700;">₹${Number(item.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td>${item.renewal}</td>
+                            <td><span class="badge badge-${item.status}">${item.status.toUpperCase()}</span></td>
+                            <td>${item.actionHtml}</td>
                         </tr>
                     `).join(''));
                 }
@@ -2982,7 +3008,8 @@ HTML_PAGE = """<!DOCTYPE html>
                     body: JSON.stringify({prompt: q, company_id: 1})
                 });
                 const d = await res.json();
-                b.innerHTML = `<strong>[${d.provider}]</strong><br>${d.response.replace(/\n/g, '<br>')}`;
+                const formatted = (d.response || '').split(String.fromCharCode(10)).join('<br>');
+                b.innerHTML = `<strong>[${d.provider}]</strong><br>${formatted}`;
             } catch(e) {
                 b.innerText = 'Error connecting to copilot: ' + e;
             }
@@ -3153,7 +3180,8 @@ HTML_PAGE = """<!DOCTYPE html>
                     body: JSON.stringify({prompt: q, company_id: 1})
                 });
                 const d = await res.json();
-                b.innerHTML = `<strong>[${d.provider}]</strong><br>${d.response.replace(/\\n/g, '<br>')}`;
+                const formatted = (d.response || '').split(String.fromCharCode(10)).join('<br>');
+                b.innerHTML = `<strong>[${d.provider}]</strong><br>${formatted}`;
             } catch(e) {
                 b.innerText = 'Unable to contact copilot right now.';
             }
