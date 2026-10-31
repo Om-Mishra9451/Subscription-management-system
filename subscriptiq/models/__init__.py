@@ -9,10 +9,12 @@ from . import product_extension
 from . import product_variant
 from . import plan_extension
 from . import discount
+from . import discount_management
 from . import tax
 from . import quotation_template
 from . import subscription_adapter
 from . import payment
+from . import payment_management
 from . import scan
 from . import rule
 from . import risk_case

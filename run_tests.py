@@ -32,6 +32,7 @@ def run_all_tests():
 
     test_modules = [
         'subscriptiq.tests.test_original_modules',
+        'subscriptiq.tests.test_remaining_modules',
         'subscriptiq.tests.test_security',
         'subscriptiq.tests.test_subscription_adapter',
         'subscriptiq.tests.test_billing_guard',

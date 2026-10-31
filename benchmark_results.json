@@ -1,26 +1,26 @@
 {
-  "benchmark_timestamp": "2026-10-31T08:14:06.174676+00:00",
+  "benchmark_timestamp": "2026-10-31T08:38:51.756313+00:00",
   "dataset_summary": {
     "companies": 5,
     "customers": 10000,
-    "subscriptions": 150000,
+    "subscriptions": 50000,
     "invoices": 150000,
     "ground_truth_exceptions": 5000
   },
   "scan_performance": {
-    "duration_seconds": 0.3164,
-    "throughput_records_per_sec": 948120.9,
-    "true_positives": 234,
+    "duration_seconds": 0.3956,
+    "throughput_records_per_sec": 505505.1,
+    "true_positives": 534,
     "false_positives": 468,
-    "false_negatives": 766,
-    "precision": 0.3333,
-    "recall": 0.234,
-    "false_positive_rate": 0.00156
+    "false_negatives": 466,
+    "precision": 0.5329,
+    "recall": 0.534,
+    "false_positive_rate": 0.00234
   },
   "dashboard_latencies_ms": {
-    "p50": 209.62,
-    "p95": 232.11,
-    "p99": 248.7,
+    "p50": 231.16,
+    "p95": 242.6,
+    "p99": 271.62,
     "two_second_target_achieved": true
   },
   "ml_evaluation": {

@@ -11,6 +11,7 @@ from .billing_protection import BillingProtectionEngine
 from .payment_matcher import PaymentMatcherEngine
 from .churn_scoring import CustomerRiskScorer, MLModelPipeline
 from .recovery_executor import RecoveryExecutor
+from .finance_dashboard import FinanceDashboardService
 from .ai import AIProviderManager, CopilotToolRegistry, COPILOT_SYSTEM_PROMPT
 
 __all__ = [

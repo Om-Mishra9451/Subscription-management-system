@@ -389,10 +389,11 @@ except ImportError:
         @classmethod
         def __init_subclass__(cls, **kwargs):
             super().__init_subclass__(**kwargs)
-            name = getattr(cls, '_name', None)
-            inherit = getattr(cls, '_inherit', None)
+            name = cls.__dict__.get('_name')
+            inherit = cls.__dict__.get('_inherit')
             if not name and inherit:
                 cls._name = inherit
+                name = inherit
             if name:
                 MODEL_REGISTRY[name] = cls
             if inherit:
@@ -441,6 +442,7 @@ except ImportError:
                     compute_fn = getattr(cls, attr.compute, None)
                     if callable(compute_fn):
                         compute_fn(recordset)
+
             return recordset
 
         @classmethod

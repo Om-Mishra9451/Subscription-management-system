@@ -94,7 +94,6 @@ class BillingEngine:
                 disc_rule = env['subscriptiq.discount'].browse(disc_rule)
             if hasattr(disc_rule, 'validate_and_calculate'):
                 discount_amount = disc_rule.validate_and_calculate(recurring_base, eval_date=today)
-                disc_rule.record_usage()
 
         subtotal = max(0.0, recurring_base - discount_amount)
         
@@ -126,6 +125,17 @@ class BillingEngine:
             'subscription_id': subscription.id,
             'subscriptiq_risk_state': 'verified_healthy'
         })
+
+        # Record discount usage and ledger entry now that invoice is created
+        if disc_rule and hasattr(disc_rule, 'record_usage'):
+            disc_rule.record_usage(
+                invoice=invoice,
+                subscription=subscription,
+                partner=subscription.partner_id,
+                original_amount=recurring_base,
+                deduction=discount_amount,
+                final_amount=subtotal
+            )
 
         # 5. Commit Reservation Guard
         BillingProtectionEngine.commit_billing_slot(env, guard_key, invoice.id)
