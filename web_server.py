@@ -511,31 +511,166 @@ HTML_PAGE = """<!DOCTYPE html>
         .chat-user { background: var(--primary); color: white; align-self: flex-end; }
         .copilot-footer { padding: 0.75rem 1rem; background: white; border-top: 1px solid var(--gray-200); display: flex; gap: 0.5rem; }
 
-        /* Toast */
-        .toast { position: fixed; top: 1.5rem; right: 1.5rem; background: var(--dark); color: white; padding: 0.85rem 1.25rem; border-radius: 8px; font-size: 0.875rem; box-shadow: var(--shadow-lg); z-index: 3000; display: none; }
+        /* Auth Screen Styles */
+        .auth-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 10%, #1e1b4b 0%, #0f172a 100%); padding: 1.5rem; }
+        .auth-card { background: white; width: 100%; max-width: 480px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .auth-header { padding: 2rem 2rem 1.25rem 2rem; text-align: center; background: white; border-bottom: 1px solid var(--gray-200); }
+        .auth-nav-tabs { display: flex; border-bottom: 1px solid var(--gray-200); background: var(--gray-50); }
+        .auth-tab-btn { flex: 1; padding: 0.9rem; text-align: center; font-size: 0.875rem; font-weight: 700; color: var(--gray-600); cursor: pointer; border: none; background: transparent; border-bottom: 3px solid transparent; transition: all 0.2s; }
+        .auth-tab-btn.active { color: var(--primary); background: white; border-bottom-color: var(--primary); }
+        .auth-body { padding: 1.75rem 2rem 2rem 2rem; }
+        .auth-quick-login { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px dashed var(--gray-200); }
+        .auth-demo-grid { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.6rem; }
+        .demo-pill { display: flex; justify-content: space-between; align-items: center; padding: 0.55rem 0.85rem; border-radius: 8px; font-size: 0.78rem; font-weight: 600; cursor: pointer; border: 1px solid var(--gray-200); background: var(--gray-50); transition: all 0.15s; }
+        .demo-pill:hover { background: #eef2ff; border-color: var(--primary); transform: translateY(-1px); }
+
+        /* Role Badges */
+        .role-badge-admin { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .role-badge-staff { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .role-badge-customer { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+
+        /* Dashboard Layouts */
+        .dashboard-layout { display: none; }
+        .dashboard-layout.active { display: block; animation: fadeIn 0.2s ease-in; }
+        .customer-card-accent { border-left: 4px solid var(--primary); }
     </style>
 </head>
 <body>
     <div id="toast" class="toast"></div>
 
-    <!-- Header -->
-    <nav class="navbar">
-        <div style="display:flex; align-items:center;">
-            <a href="/" class="nav-brand">
-                <div class="logo-badge">BL</div>
-                <span>Brightloop</span>
-            </a>
-            <span class="tagline">Subscription Management & Autonomous Revenue Assurance System</span>
-        </div>
-        <div class="nav-actions">
-            <button class="btn btn-outline btn-sm" onclick="toggleDbExplorer()">🗄️ Database Tables</button>
-            <span class="badge badge-active">● System Live</span>
-            <span style="font-size:0.85rem; color:var(--gray-600); font-weight:600;">Admin Mode</span>
-        </div>
-    </nav>
+    <!-- ============================================================= -->
+    <!-- 1. COMMON LOGIN / REGISTRATION SCREEN                        -->
+    <!-- ============================================================= -->
+    <div id="view-auth" class="auth-wrapper" style="display:flex;">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div style="display:inline-flex; align-items:center; gap:0.5rem; justify-content:center; margin-bottom:0.5rem;">
+                    <div class="logo-badge" style="width:40px; height:40px; font-size:1.1rem;">BL</div>
+                    <h2 style="font-size:1.5rem; font-weight:800; color:var(--dark);">SubscriptIQ</h2>
+                </div>
+                <p style="font-size:0.85rem; color:var(--gray-600); font-weight:500;">
+                    Autonomous Revenue Assurance Engine for Odoo
+                </p>
+                <div style="margin-top:0.5rem; font-size:0.75rem; color:var(--primary); font-weight:600;">
+                    Detect. Prevent. Recover. Measure.
+                </div>
+            </div>
 
-    <!-- Top Tabs (All 10 Specification Modules) -->
-    <nav class="module-nav">
+            <!-- Auth Switcher Tabs -->
+            <div class="auth-nav-tabs">
+                <button id="auth-btn-login" class="auth-tab-btn active" onclick="switchAuthTab('login')">Sign In</button>
+                <button id="auth-btn-register" class="auth-tab-btn" onclick="switchAuthTab('register')">Customer Registration</button>
+            </div>
+
+            <div class="auth-body">
+                <div id="auth-error-box" style="display:none; padding:0.75rem 1rem; border-radius:8px; background:var(--danger-light); color:var(--danger); border:1px solid #fca5a5; font-size:0.85rem; font-weight:600; margin-bottom:1rem;"></div>
+
+                <!-- 1. Common Sign In Form -->
+                <form id="form-login" onsubmit="event.preventDefault(); submitLogin();">
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label class="form-label">Email or Username</label>
+                        <input type="email" id="login-email" class="form-input" placeholder="e.g. admin@brightloop.software" required autocomplete="username">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1.25rem;">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="login-pwd" class="form-input" placeholder="••••••••••••" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%; padding:0.75rem; font-size:0.95rem; font-weight:700;">
+                        Sign In &amp; Redirect to Dashboard →
+                    </button>
+
+                    <!-- Quick Demo Logins for Instant Testing -->
+                    <div class="auth-quick-login">
+                        <div style="font-size:0.75rem; font-weight:700; color:var(--gray-600); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.4rem;">
+                            ⚡ Quick Test Personas (1-Click Fill &amp; Login)
+                        </div>
+                        <div class="auth-demo-grid">
+                            <div class="demo-pill" onclick="quickLogin('admin@brightloop.software', 'SuperAdmin@2026')">
+                                <span>👑 <strong>Admin</strong> (admin@brightloop.software)</span>
+                                <span class="badge role-badge-admin">Admin Dashboard</span>
+                            </div>
+                            <div class="demo-pill" onclick="quickLogin('staff@brightloop.software', 'StaffMember@2026')">
+                                <span>👔 <strong>Staff</strong> (staff@brightloop.software)</span>
+                                <span class="badge role-badge-staff">Staff Dashboard</span>
+                            </div>
+                            <div class="demo-pill" onclick="quickLogin('alice@acme.com', 'CustomerP@ss2026')">
+                                <span>🏢 <strong>Customer</strong> (alice@acme.com)</span>
+                                <span class="badge role-badge-customer">Customer Portal</span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- 2. Customer Self-Registration Form -->
+                <form id="form-register" style="display:none;" onsubmit="event.preventDefault(); submitCustomerRegister();">
+                    <div class="form-group" style="margin-bottom:0.85rem;">
+                        <label class="form-label">Full Name / Contact Person</label>
+                        <input type="text" id="reg-name" class="form-input" placeholder="e.g. Rachel Zane" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0.85rem;">
+                        <label class="form-label">Company / Organization Name</label>
+                        <input type="text" id="reg-company" class="form-input" placeholder="e.g. Zenith Tech Global" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0.85rem;">
+                        <label class="form-label">Billing Email</label>
+                        <input type="email" id="reg-email" class="form-input" placeholder="billing@zenith.io" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:1.25rem;">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="reg-pwd" class="form-input" placeholder="Min 9 chars, Upper, Lower, Symbol" required>
+                        <span style="font-size:0.75rem; color:var(--gray-600); margin-top:0.25rem;">Must be &gt;8 characters with uppercase, lowercase, and special character.</span>
+                    </div>
+                    <div style="padding:0.6rem 0.8rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:1rem; font-size:0.8rem; color:var(--gray-600);">
+                        🔒 <strong>Access Tier:</strong> Self-registration automatically creates a secure <strong>Customer Portal</strong> account. Staff and Admin accounts are restricted.
+                    </div>
+                    <button type="submit" class="btn btn-success" style="width:100%; padding:0.75rem; font-size:0.95rem; font-weight:700;">
+                        Create Customer Account &amp; Sign In →
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- 2. AUTHENTICATED APP SHELL                                    -->
+    <!-- ============================================================= -->
+    <div id="view-app" style="display:none; flex-direction:column; min-height:100vh;">
+        <!-- Authenticated Header -->
+        <nav class="navbar">
+            <div style="display:flex; align-items:center;">
+                <a href="javascript:void(0)" onclick="navigateToUserDashboard()" class="nav-brand">
+                    <div class="logo-badge">BL</div>
+                    <span>Brightloop</span>
+                </a>
+                <span class="tagline">Subscription Management &amp; Autonomous Revenue Assurance</span>
+            </div>
+            <div class="nav-actions">
+                <!-- Active Role Badge -->
+                <span id="header-role-badge" class="badge">ROLE</span>
+                <!-- User Profile Display -->
+                <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                    <span id="header-user-name" style="font-size:0.85rem; font-weight:700; color:var(--dark);">User Name</span>
+                    <span id="header-user-email" style="font-size:0.75rem; color:var(--gray-600);">email</span>
+                </div>
+                <!-- Admin Role Switcher (Visible only if Admin) -->
+                <div id="admin-role-switcher" style="display:none; align-items:center; gap:0.4rem;">
+                    <select id="role-preview-select" class="form-select" style="padding:0.3rem 0.6rem; font-size:0.78rem;" onchange="previewRole(this.value)">
+                        <option value="admin">👑 Admin View (/admin/dashboard)</option>
+                        <option value="staff">👔 Staff View (/staff/dashboard)</option>
+                        <option value="customer">🏢 Customer View (/customer/dashboard)</option>
+                    </select>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="toggleDbExplorer()">🗄️ Database</button>
+                <button class="btn btn-outline btn-sm" onclick="handleLogout()" style="color:var(--danger); border-color:#fca5a5;">🚪 Sign Out</button>
+            </div>
+        </nav>
+
+        <!-- ============================================================= -->
+        <!-- ROLE DASHBOARD 1: ADMINISTRATOR CONSOLE (/admin/dashboard)   -->
+        <!-- ============================================================= -->
+        <div id="layout-admin" class="dashboard-layout">
+            <!-- Top Tabs (All 10 Specification Modules) -->
+            <nav class="module-nav">
         <div class="nav-tab active" data-tab="tab-users" onclick="switchTab('tab-users', this)">👥 1. Users &amp; RBAC</div>
         <div class="nav-tab" data-tab="tab-products" onclick="switchTab('tab-products', this)">📦 2. Products &amp; Plans</div>
         <div class="nav-tab" data-tab="tab-subs" onclick="switchTab('tab-subs', this)">📑 3. Quotations &amp; Subscriptions</div>
@@ -1170,6 +1305,272 @@ HTML_PAGE = """<!DOCTYPE html>
             </div>
         </section>
     </main>
+    </div><!-- End #layout-admin -->
+
+    <!-- ============================================================= -->
+    <!-- ROLE DASHBOARD 2: INTERNAL STAFF OPERATIONS CONSOLE          -->
+    <!-- ============================================================= -->
+    <div id="layout-staff" class="dashboard-layout">
+        <div style="background:var(--primary-light); border-bottom:1px solid #c7d2fe; padding:0.75rem 2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+                <span class="badge role-badge-staff" style="font-size:0.8rem; padding:0.3rem 0.6rem;">👔 Operations Console</span>
+                <span style="font-size:0.85rem; color:var(--gray-700); font-weight:600;">Authorized: Quotations, Invoicing, Payment Settlements, and Guardian Investigation</span>
+            </div>
+            <div style="display:flex; gap:0.5rem;">
+                <button class="btn btn-primary btn-sm" onclick="triggerAutomatedBilling()">▶️ Run Billing Engine</button>
+                <button class="btn btn-outline btn-sm" onclick="triggerReconciliationDemo()">⚡ Reconcile Statement</button>
+                <button class="btn btn-outline btn-sm" onclick="triggerGuardianScan()">🛡️ Guardian Scan</button>
+            </div>
+        </div>
+
+        <!-- Staff Module Navigation Bar -->
+        <nav class="module-nav" style="border-bottom:1px solid var(--gray-200);">
+            <div class="nav-tab active" data-staff-tab="staff-tab-subs" onclick="switchStaffTab('staff-tab-subs', this)">📑 1. Quotations &amp; Subscriptions</div>
+            <div class="nav-tab" data-staff-tab="staff-tab-billing" onclick="switchStaffTab('staff-tab-billing', this)">🧾 2. Invoices &amp; Billing</div>
+            <div class="nav-tab" data-staff-tab="staff-tab-payments" onclick="switchStaffTab('staff-tab-payments', this)">💳 3. Payments &amp; Reconciliation</div>
+            <div class="nav-tab" data-staff-tab="staff-tab-guardian" onclick="switchStaffTab('staff-tab-guardian', this)">🛡️ 4. Revenue Guardian Cases</div>
+            <div class="nav-tab" data-staff-tab="staff-tab-customers" onclick="switchStaffTab('staff-tab-customers', this)">👥 5. Permitted Customers</div>
+        </nav>
+
+        <main class="container">
+            <!-- Staff Tab 1: Subscriptions & Quotations -->
+            <div id="staff-tab-subs" class="staff-tab-content" style="display:block;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h3 style="font-size:1.15rem; font-weight:700;">Customer Subscriptions &amp; Active Quotations</h3>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="btn btn-outline btn-sm" onclick="openModal('modal-create-quote')">+ New Quotation</button>
+                        <button class="btn btn-primary btn-sm" onclick="openModal('modal-create-sub')">+ New Subscription</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Subscription / Quote</th><th>Customer Name</th><th>Plan</th><th>Recurring Amount</th><th>Next Renewal</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="staff-subs-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staff Tab 2: Billing & Invoices -->
+            <div id="staff-tab-billing" class="staff-tab-content" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h3 style="font-size:1.15rem; font-weight:700;">Receivables &amp; Customer Invoices</h3>
+                    <button class="btn btn-primary btn-sm" onclick="triggerAutomatedBilling()">▶️ Run Automated Billing Now</button>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Invoice #</th><th>Customer</th><th>Due Date</th><th>Total</th><th>Balance Due</th><th>State</th><th>Payment State</th><th>Action</th></tr></thead>
+                            <tbody id="staff-invoices-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staff Tab 3: Payments -->
+            <div id="staff-tab-payments" class="staff-tab-content" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h3 style="font-size:1.15rem; font-weight:700;">Recorded Payments &amp; Bank Reconciliation</h3>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="btn btn-outline btn-sm" onclick="triggerReconciliationDemo()">⚡ Auto-Reconcile Statement Demo</button>
+                        <button class="btn btn-primary btn-sm" onclick="openModal('modal-record-payment')">+ Record Payment</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Receipt #</th><th>Customer</th><th>Invoice</th><th>Method</th><th>Amount</th><th>Date</th><th>Reference</th><th>Status</th></tr></thead>
+                            <tbody id="staff-payments-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staff Tab 4: Guardian Risk Cases -->
+            <div id="staff-tab-guardian" class="staff-tab-content" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h3 style="font-size:1.15rem; font-weight:700;">Revenue Guardian Cases (Overdue &amp; Leakage Exceptions)</h3>
+                    <button class="btn btn-outline btn-sm" onclick="triggerGuardianScan()">⚡ Trigger Risk Scan</button>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Case ID</th><th>Customer</th><th>Rule Code</th><th>Severity</th><th>At Risk</th><th>Action</th><th>Status</th><th>Resolution</th></tr></thead>
+                            <tbody id="staff-guardian-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staff Tab 5: Customers -->
+            <div id="staff-tab-customers" class="staff-tab-content" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h3 style="font-size:1.15rem; font-weight:700;">Permitted Customers Directory</h3>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Organization</th><th>Login / Billing Email</th><th>Account Type</th><th>Active Status</th></tr></thead>
+                            <tbody id="staff-customers-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div><!-- End #layout-staff -->
+
+    <!-- ============================================================= -->
+    <!-- ROLE DASHBOARD 3: CUSTOMER SELF-SERVICE PORTAL                -->
+    <!-- ============================================================= -->
+    <div id="layout-customer" class="dashboard-layout">
+        <!-- Customer Welcome Hero Banner -->
+        <div style="background:linear-gradient(135deg, #065f46, #047857); color:white; padding:1.75rem 2rem; border-bottom:1px solid #059669;">
+            <div style="max-width:1350px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                <div>
+                    <div style="display:inline-block; padding:0.2rem 0.6rem; border-radius:6px; background:rgba(255,255,255,0.2); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">
+                        🏢 Customer Self-Service Portal
+                    </div>
+                    <h2 style="font-size:1.5rem; font-weight:800;" id="cust-welcome-title">Welcome back, Alice Manager!</h2>
+                    <p style="font-size:0.875rem; color:#a7f3d0; margin-top:0.25rem;">
+                        Company: <strong id="cust-welcome-org" style="color:white;">Acme Enterprise Ltd</strong> | Status: <span style="color:#6ee7b7; font-weight:700;">✓ Verified Active Customer</span>
+                    </p>
+                </div>
+                <div style="display:flex; gap:0.75rem;">
+                    <button class="btn btn-outline" style="background:white; color:#065f46; font-weight:700;" onclick="switchCustomerTab('cust-tab-invoices')">View My Invoices</button>
+                    <button class="btn" style="background:#10b981; color:white; font-weight:700;" onclick="switchCustomerTab('cust-tab-pay')">💳 Settle Balance Due</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Module Navigation Bar -->
+        <nav class="module-nav" style="border-bottom:1px solid var(--gray-200);">
+            <div class="nav-tab active" data-cust-tab="cust-tab-overview" onclick="switchCustomerTab('cust-tab-overview', this)">📊 1. My Subscriptions &amp; Overview</div>
+            <div class="nav-tab" data-cust-tab="cust-tab-invoices" onclick="switchCustomerTab('cust-tab-invoices', this)">🧾 2. My Invoices &amp; Receipts</div>
+            <div class="nav-tab" data-cust-tab="cust-tab-pay" onclick="switchCustomerTab('cust-tab-pay', this)">💳 3. Make Payment</div>
+            <div class="nav-tab" data-cust-tab="cust-tab-account" onclick="switchCustomerTab('cust-tab-account', this)">👤 4. My Account &amp; Security</div>
+        </nav>
+
+        <main class="container">
+            <!-- Customer KPI Cards -->
+            <div class="metrics-grid">
+                <div class="metric-card customer-card-accent">
+                    <div class="metric-label">My Subscriptions</div>
+                    <div class="metric-value" id="cust-kpi-subs">1 Active</div>
+                    <div class="metric-sub" id="cust-kpi-planname">Business Suite - Monthly</div>
+                </div>
+                <div class="metric-card customer-card-accent">
+                    <div class="metric-label">Recurring Plan Rate</div>
+                    <div class="metric-value" id="cust-kpi-mrr">₹1,200.00</div>
+                    <div class="metric-sub">Billed per cycle</div>
+                </div>
+                <div class="metric-card customer-card-accent">
+                    <div class="metric-label">Next Renewal Date</div>
+                    <div class="metric-value" id="cust-kpi-renewal" style="font-size:1.3rem;">2026-11-20</div>
+                    <div class="metric-sub">Auto-renewal scheduled</div>
+                </div>
+                <div class="metric-card accent-danger">
+                    <div class="metric-label">Total Outstanding Due</div>
+                    <div class="metric-value" id="cust-kpi-outstanding" style="color:var(--danger);">₹5,000.00</div>
+                    <div class="metric-sub">Payment pending</div>
+                </div>
+            </div>
+
+            <!-- Customer Tab 1: Subscriptions Overview -->
+            <div id="cust-tab-overview" class="cust-tab-content" style="display:block;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📑 My Active Subscriptions</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Subscription Reference</th><th>Plan</th><th>Recurring Total</th><th>Next Renewal Date</th><th>Current Status</th><th>Self-Service Actions</th></tr></thead>
+                            <tbody id="cust-subs-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Tab 2: Invoices -->
+            <div id="cust-tab-invoices" class="cust-tab-content" style="display:none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🧾 My Invoices &amp; Receipts</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Invoice Number</th><th>Due Date</th><th>Total Amount</th><th>Balance Due</th><th>Status</th><th>Receipt</th><th>Action</th></tr></thead>
+                            <tbody id="cust-invoices-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Tab 3: Pay -->
+            <div id="cust-tab-pay" class="cust-tab-content" style="display:none;">
+                <div class="card" style="max-width:650px; margin:0 auto; padding:1.5rem;">
+                    <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:0.5rem;">💳 Settle Outstanding Invoices</h3>
+                    <p style="font-size:0.85rem; color:var(--gray-600); margin-bottom:1.25rem;">
+                        Pay directly via UPI, Credit/Debit Card, or Bank Transfer.
+                    </p>
+                    <form onsubmit="event.preventDefault(); submitCustomerDirectPayment();">
+                        <div class="form-group" style="margin-bottom:1rem;">
+                            <label class="form-label">Select Open Invoice</label>
+                            <select id="cust-pay-invoice-select" class="form-select" onchange="autoFillCustInvoiceResidual()" required></select>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Amount (₹)</label>
+                                <input type="number" id="cust-pay-amount" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Payment Channel</label>
+                                <select id="cust-pay-method" class="form-select">
+                                    <option value="upi">UPI / Instant Transfer</option>
+                                    <option value="card">Credit / Debit Card</option>
+                                    <option value="bank_transfer">Net Banking / Wire</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom:1.25rem;">
+                            <label class="form-label">Transaction Reference (UTR / Auth #)</label>
+                            <input type="text" id="cust-pay-ref" class="form-input" placeholder="e.g. UPI-TXN-998844" required>
+                        </div>
+                        <button type="submit" class="btn btn-success" style="width:100%; padding:0.75rem; font-weight:700;">
+                            Authorize &amp; Pay Invoice →
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Customer Tab 4: Account Security -->
+            <div id="cust-tab-account" class="cust-tab-content" style="display:none;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+                    <div class="card" style="padding:1.5rem;">
+                        <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:1rem;">👤 Account Profile Information</h3>
+                        <div style="display:flex; flex-direction:column; gap:0.75rem; font-size:0.875rem;">
+                            <div><span style="color:var(--gray-600)">Customer Name:</span> <strong id="cust-profile-name">Alice Manager</strong></div>
+                            <div><span style="color:var(--gray-600)">Billing Email:</span> <strong id="cust-profile-email">alice@acme.com</strong></div>
+                            <div><span style="color:var(--gray-600)">Company Name:</span> <strong id="cust-profile-company">Acme Enterprise Ltd</strong></div>
+                            <div><span style="color:var(--gray-600)">Assigned Role:</span> <span class="badge badge-active">Customer Portal</span></div>
+                        </div>
+                    </div>
+                    <div class="card" style="padding:1.5rem;">
+                        <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.5rem;">🔒 Update Account Password</h3>
+                        <p style="font-size:0.8rem; color:var(--gray-600); margin-bottom:1rem;">Must be &gt;8 chars with uppercase, lowercase, and special symbol.</p>
+                        <form onsubmit="event.preventDefault(); submitCustomerPasswordChange();">
+                            <div class="form-group" style="margin-bottom:0.85rem;">
+                                <label class="form-label">New Password</label>
+                                <input type="password" id="cust-new-pwd" class="form-input" placeholder="••••••••••••" required>
+                            </div>
+                            <button type="submit" class="btn btn-outline" style="width:100%; font-weight:700;">Update Password</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div><!-- End #layout-customer -->
+    </div><!-- End #view-app -->
 
     <!-- ============================================================= -->
     <!-- MODALS: USER MANAGEMENT                                       -->
@@ -1463,13 +1864,254 @@ HTML_PAGE = """<!DOCTYPE html>
     </div>
 
     <script>
+        // Role & Session State Management
+        let CURRENT_USER = null;
+        try {
+            const raw = localStorage.getItem('subscriptiq_user');
+            if (raw) CURRENT_USER = JSON.parse(raw);
+        } catch(e) {
+            CURRENT_USER = null;
+        }
+
+        function setTxt(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.innerText = (val !== null && val !== undefined) ? val : '-';
+        }
+
+        function setHtml(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = (val !== null && val !== undefined) ? val : '';
+        }
+
         function showToast(msg) {
             const toast = document.getElementById('toast');
+            if (!toast) return;
             toast.innerText = msg;
             toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 4000);
         }
 
+        function getRoleDashboard(role) {
+            if (role === 'admin') return '/admin/dashboard';
+            if (role === 'staff') return '/staff/dashboard';
+            if (role === 'customer') return '/customer/dashboard';
+            return '/login';
+        }
+
+        function navigateToUserDashboard() {
+            if (CURRENT_USER) {
+                routeTo(getRoleDashboard(CURRENT_USER.role));
+            } else {
+                routeTo('/login');
+            }
+        }
+
+        function switchAuthTab(tab) {
+            const btnLogin = document.getElementById('auth-btn-login');
+            const btnReg = document.getElementById('auth-btn-register');
+            const fLogin = document.getElementById('form-login');
+            const fReg = document.getElementById('form-register');
+            const errBox = document.getElementById('auth-error-box');
+            if (errBox) errBox.style.display = 'none';
+
+            if (tab === 'login') {
+                if (btnLogin) btnLogin.classList.add('active');
+                if (btnReg) btnReg.classList.remove('active');
+                if (fLogin) fLogin.style.display = 'block';
+                if (fReg) fReg.style.display = 'none';
+            } else {
+                if (btnLogin) btnLogin.classList.remove('active');
+                if (btnReg) btnReg.classList.add('active');
+                if (fLogin) fLogin.style.display = 'none';
+                if (fReg) fReg.style.display = 'block';
+            }
+        }
+
+        async function submitLogin() {
+            const emailInput = document.getElementById('login-email');
+            const pwdInput = document.getElementById('login-pwd');
+            const errBox = document.getElementById('auth-error-box');
+            const login = emailInput ? emailInput.value.trim() : '';
+            const password = pwdInput ? pwdInput.value : '';
+
+            if (errBox) errBox.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({login, password})
+                });
+                const d = await res.json();
+                if (!res.ok || !d.success) {
+                    if (errBox) {
+                        errBox.innerText = d.error || 'Invalid email or password.';
+                        errBox.style.display = 'block';
+                    }
+                    return;
+                }
+                CURRENT_USER = d.user;
+                localStorage.setItem('subscriptiq_user', JSON.stringify(CURRENT_USER));
+                const targetPath = getRoleDashboard(CURRENT_USER.role);
+                showToast(`✓ Welcome, ${CURRENT_USER.name}! Redirecting to ${CURRENT_USER.role.toUpperCase()} dashboard...`);
+                routeTo(targetPath);
+            } catch(err) {
+                if (errBox) {
+                    errBox.innerText = 'Login communication error: ' + err;
+                    errBox.style.display = 'block';
+                }
+            }
+        }
+
+        function quickLogin(email, password) {
+            const emailInput = document.getElementById('login-email');
+            const pwdInput = document.getElementById('login-pwd');
+            if (emailInput) emailInput.value = email;
+            if (pwdInput) pwdInput.value = password;
+            switchAuthTab('login');
+            submitLogin();
+        }
+
+        async function submitCustomerRegister() {
+            const name = document.getElementById('reg-name').value.trim();
+            const company = document.getElementById('reg-company').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-pwd').value;
+            const errBox = document.getElementById('auth-error-box');
+            if (errBox) errBox.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name, company_name: company, login: email, password})
+                });
+                const d = await res.json();
+                if (!res.ok || !d.success) {
+                    if (errBox) {
+                        errBox.innerText = d.error || 'Customer registration failed.';
+                        errBox.style.display = 'block';
+                    }
+                    return;
+                }
+                CURRENT_USER = d.user;
+                localStorage.setItem('subscriptiq_user', JSON.stringify(CURRENT_USER));
+                showToast(`✓ Account created! Welcome, ${CURRENT_USER.name}!`);
+                routeTo('/customer/dashboard');
+            } catch(err) {
+                if (errBox) {
+                    errBox.innerText = 'Registration error: ' + err;
+                    errBox.style.display = 'block';
+                }
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch('/api/auth/logout', {method: 'POST'});
+            } catch(e) {}
+            localStorage.removeItem('subscriptiq_user');
+            CURRENT_USER = null;
+            showToast('✓ Successfully signed out.');
+            routeTo('/login');
+        }
+
+        function previewRole(role) {
+            if (!CURRENT_USER || CURRENT_USER.role !== 'admin') {
+                showToast('⚠️ Role preview switcher is restricted to Administrators.');
+                return;
+            }
+            routeTo(getRoleDashboard(role));
+        }
+
+        function routeTo(path, pushState = true) {
+            if (!path || path === '/' || path === '/subscriptiq') {
+                if (CURRENT_USER) {
+                    path = getRoleDashboard(CURRENT_USER.role);
+                } else {
+                    path = '/login';
+                }
+            }
+
+            // Auth View
+            if (path === '/login' || path === '/register') {
+                document.getElementById('view-auth').style.display = 'flex';
+                document.getElementById('view-app').style.display = 'none';
+                switchAuthTab(path === '/register' ? 'register' : 'login');
+                if (pushState) history.pushState({path}, '', path);
+                return;
+            }
+
+            // Route Protection Check
+            if (!CURRENT_USER) {
+                showToast('⚠️ Please sign in to access your dashboard.');
+                routeTo('/login', pushState);
+                return;
+            }
+
+            // Role-based protection:
+            if (path === '/admin/dashboard' && CURRENT_USER.role !== 'admin') {
+                showToast('⚠️ Access Denied: Administrator role required.');
+                routeTo(getRoleDashboard(CURRENT_USER.role), pushState);
+                return;
+            }
+            if (path === '/staff/dashboard' && CURRENT_USER.role === 'customer') {
+                showToast('⚠️ Access Denied: Internal Staff or Admin role required.');
+                routeTo('/customer/dashboard', pushState);
+                return;
+            }
+
+            // Show Authenticated Shell
+            document.getElementById('view-auth').style.display = 'none';
+            document.getElementById('view-app').style.display = 'flex';
+
+            // User Info in Navbar
+            setTxt('header-user-name', CURRENT_USER.name || 'User');
+            setTxt('header-user-email', CURRENT_USER.login || '');
+            const roleBadge = document.getElementById('header-role-badge');
+            if (roleBadge) {
+                if (CURRENT_USER.role === 'admin') {
+                    roleBadge.innerText = '👑 ADMINISTRATOR';
+                    roleBadge.className = 'badge role-badge-admin';
+                } else if (CURRENT_USER.role === 'staff') {
+                    roleBadge.innerText = '👔 INTERNAL STAFF';
+                    roleBadge.className = 'badge role-badge-staff';
+                } else {
+                    roleBadge.innerText = '🏢 CUSTOMER PORTAL';
+                    roleBadge.className = 'badge role-badge-customer';
+                }
+            }
+
+            // Admin Role Switcher
+            const admSwitcher = document.getElementById('admin-role-switcher');
+            if (admSwitcher) {
+                admSwitcher.style.display = (CURRENT_USER.role === 'admin') ? 'flex' : 'none';
+                const roleSel = document.getElementById('role-preview-select');
+                if (roleSel) {
+                    if (path === '/admin/dashboard') roleSel.value = 'admin';
+                    else if (path === '/staff/dashboard') roleSel.value = 'staff';
+                    else if (path === '/customer/dashboard') roleSel.value = 'customer';
+                }
+            }
+
+            // Activate Layout
+            document.querySelectorAll('.dashboard-layout').forEach(l => l.classList.remove('active'));
+            if (path === '/admin/dashboard') {
+                const el = document.getElementById('layout-admin');
+                if (el) el.classList.add('active');
+            } else if (path === '/staff/dashboard') {
+                const el = document.getElementById('layout-staff');
+                if (el) el.classList.add('active');
+            } else if (path === '/customer/dashboard') {
+                const el = document.getElementById('layout-customer');
+                if (el) el.classList.add('active');
+            }
+
+            if (pushState) history.pushState({path}, '', path);
+            fetchAllData();
+        }
+
+        // Layout Navigation Subtab Switchers
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -1479,6 +2121,30 @@ HTML_PAGE = """<!DOCTYPE html>
                 el.classList.add('active');
             } else {
                 const found = document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
+                if (found) found.classList.add('active');
+            }
+        }
+
+        function switchStaffTab(tabId, el) {
+            document.querySelectorAll('.staff-tab-content').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('[data-staff-tab]').forEach(t => t.classList.remove('active'));
+            const sec = document.getElementById(tabId);
+            if (sec) sec.style.display = 'block';
+            if (el) el.classList.add('active');
+            else {
+                const found = document.querySelector(`[data-staff-tab="${tabId}"]`);
+                if (found) found.classList.add('active');
+            }
+        }
+
+        function switchCustomerTab(tabId, el) {
+            document.querySelectorAll('.cust-tab-content').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('[data-cust-tab]').forEach(t => t.classList.remove('active'));
+            const sec = document.getElementById(tabId);
+            if (sec) sec.style.display = 'block';
+            if (el) el.classList.add('active');
+            else {
+                const found = document.querySelector(`[data-cust-tab="${tabId}"]`);
                 if (found) found.classList.add('active');
             }
         }
@@ -1496,196 +2162,282 @@ HTML_PAGE = """<!DOCTYPE html>
             if (d) d.style.display = d.style.display === 'flex' ? 'none' : 'flex';
         }
 
+        function autoFillCustInvoiceResidual() {
+            const sel = document.getElementById('cust-pay-invoice-select');
+            if (!sel || !sel.value) return;
+            const opt = sel.options[sel.selectedIndex];
+            const residual = opt ? opt.getAttribute('data-residual') : null;
+            if (residual) {
+                document.getElementById('cust-pay-amount').value = parseFloat(residual);
+            }
+        }
+
+        function paySpecificInvoice(invId, residual) {
+            switchCustomerTab('cust-tab-pay');
+            const sel = document.getElementById('cust-pay-invoice-select');
+            if (sel) sel.value = invId;
+            const amt = document.getElementById('cust-pay-amount');
+            if (amt) amt.value = residual;
+        }
+
+        async function submitCustomerDirectPayment() {
+            const sel = document.getElementById('cust-pay-invoice-select');
+            const invId = parseInt(sel.value);
+            const amount = parseFloat(document.getElementById('cust-pay-amount').value);
+            const method = document.getElementById('cust-pay-method').value;
+            const ref = document.getElementById('cust-pay-ref').value;
+            if (!invId || isNaN(amount) || amount <= 0) {
+                alert('Please select an invoice and enter a valid positive payment amount.');
+                return;
+            }
+            const res = await fetch('/api/payments/record', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    invoice_id: invId,
+                    amount: amount,
+                    payment_method: method,
+                    transaction_reference: ref,
+                    notes: 'Customer Portal Self-Service Payment'
+                })
+            });
+            const d = await res.json();
+            if (d.error) {
+                alert('Payment error: ' + d.error);
+                return;
+            }
+            showToast('✓ Payment recorded successfully! Invoice balance settled.');
+            document.getElementById('cust-pay-ref').value = '';
+            fetchAllData();
+            switchCustomerTab('cust-tab-invoices');
+        }
+
+        async function submitCustomerPasswordChange() {
+            const new_password = document.getElementById('cust-new-pwd').value;
+            if (!CURRENT_USER || !CURRENT_USER.login) {
+                alert('Session expired. Please log in again.');
+                return;
+            }
+            const res = await fetch('/api/users/reset', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    email: CURRENT_USER.login,
+                    new_password: new_password
+                })
+            });
+            const d = await res.json();
+            if (d.error) {
+                alert('Password reset failed: ' + d.error);
+                return;
+            }
+            showToast('✓ Password updated successfully!');
+            document.getElementById('cust-new-pwd').value = '';
+        }
+
         async function fetchAllData() {
             try {
                 const res = await fetch('/api/master-state');
                 const data = await res.json();
 
                 // 1. Module 5 — Business Finance Dashboard
-                const m = data.finance_metrics;
-                document.getElementById('fin-active-subs').innerText = m.active_subscriptions;
-                document.getElementById('fin-recurring-rev').innerText = '₹' + Number(m.total_recurring_revenue).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                document.getElementById('fin-mrr').innerText = '₹' + Number(m.mrr).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                document.getElementById('fin-arr').innerText = '₹' + Number(m.arr).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                document.getElementById('fin-rev-received').innerText = '₹' + Number(m.revenue_received).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                document.getElementById('fin-outstanding').innerText = '₹' + Number(m.outstanding_amount).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                document.getElementById('fin-overdue').innerText = '₹' + Number(m.overdue_invoice_amount).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                document.getElementById('fin-total-inv').innerText = m.total_invoices;
-                document.getElementById('fin-total-cust').innerText = m.total_customers;
-                document.getElementById('fin-renewals-due').innerText = m.subscription_renewals_due;
+                if (data.finance_metrics) {
+                    const m = data.finance_metrics;
+                    setTxt('fin-active-subs', m.active_subscriptions);
+                    setTxt('fin-recurring-rev', '₹' + Number(m.total_recurring_revenue).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    setTxt('fin-mrr', '₹' + Number(m.mrr).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    setTxt('fin-arr', '₹' + Number(m.arr).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    setTxt('fin-rev-received', '₹' + Number(m.revenue_received).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    setTxt('fin-outstanding', '₹' + Number(m.outstanding_amount).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    setTxt('fin-overdue', '₹' + Number(m.overdue_invoice_amount).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    setTxt('fin-total-inv', m.total_invoices);
+                    setTxt('fin-total-cust', m.total_customers);
+                    setTxt('fin-renewals-due', m.subscription_renewals_due);
 
-                // Visual chart summaries
-                document.getElementById('fin-cash-chart').innerHTML = `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-weight:600;">
-                        <span style="color:var(--success)">Received: ₹${Number(m.charts.payments_vs_outstanding.received).toLocaleString('en-IN')}</span>
-                        <span style="color:var(--warning)">Outstanding: ₹${Number(m.charts.payments_vs_outstanding.outstanding).toLocaleString('en-IN')}</span>
-                    </div>
-                    <div style="background:#e2e8f0; height:18px; border-radius:9px; overflow:hidden; display:flex;">
-                        <div style="background:var(--success); width:${m.revenue_received / (m.revenue_received + m.outstanding_amount || 1) * 100}%;"></div>
-                        <div style="background:var(--warning); width:${m.outstanding_amount / (m.revenue_received + m.outstanding_amount || 1) * 100}%;"></div>
-                    </div>
-                `;
-
-                document.getElementById('fin-monthly-trend-chart').innerHTML = `
-                    <div style="display:flex; align-items:flex-end; gap:0.75rem; height:120px; padding-top:1rem;">
-                        ${m.charts.monthly_trend.map(t => `
-                            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.35rem;">
-                                <div style="background:var(--primary); width:100%; height:${Math.min(100, (t.revenue / m.mrr) * 80)}px; border-radius:4px 4px 0 0;"></div>
-                                <span style="font-size:0.75rem; color:var(--gray-600);">${t.month}</span>
+                    // Visual chart summaries
+                    if (m.charts) {
+                        setHtml('fin-cash-chart', `
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-weight:600;">
+                                <span style="color:var(--success)">Received: ₹${Number(m.charts.payments_vs_outstanding.received).toLocaleString('en-IN')}</span>
+                                <span style="color:var(--warning)">Outstanding: ₹${Number(m.charts.payments_vs_outstanding.outstanding).toLocaleString('en-IN')}</span>
                             </div>
-                        `).join('')}
-                    </div>
-                `;
+                            <div style="background:#e2e8f0; height:18px; border-radius:9px; overflow:hidden; display:flex;">
+                                <div style="background:var(--success); width:${m.revenue_received / (m.revenue_received + m.outstanding_amount || 1) * 100}%;"></div>
+                                <div style="background:var(--warning); width:${m.outstanding_amount / (m.revenue_received + m.outstanding_amount || 1) * 100}%;"></div>
+                            </div>
+                        `);
 
-                document.getElementById('fin-aging-chart').innerHTML = `
-                    <ul style="list-style:none; display:flex; flex-direction:column; gap:0.5rem;">
-                        <li style="display:flex; justify-content:space-between;"><span>0–14 Days:</span> <strong>₹${Number(m.charts.overdue_aging['0-14_days']).toLocaleString('en-IN')}</strong></li>
-                        <li style="display:flex; justify-content:space-between;"><span>15–30 Days:</span> <strong>₹${Number(m.charts.overdue_aging['15-30_days']).toLocaleString('en-IN')}</strong></li>
-                        <li style="display:flex; justify-content:space-between;"><span>31–60 Days:</span> <strong>₹${Number(m.charts.overdue_aging['31-60_days']).toLocaleString('en-IN')}</strong></li>
-                        <li style="display:flex; justify-content:space-between;"><span>60+ Days:</span> <strong>₹${Number(m.charts.overdue_aging['60+_days']).toLocaleString('en-IN')}</strong></li>
-                    </ul>
-                `;
+                        setHtml('fin-monthly-trend-chart', `
+                            <div style="display:flex; align-items:flex-end; gap:0.75rem; height:120px; padding-top:1rem;">
+                                ${m.charts.monthly_trend.map(t => `
+                                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.35rem;">
+                                        <div style="background:var(--primary); width:100%; height:${Math.min(100, (t.revenue / m.mrr) * 80)}px; border-radius:4px 4px 0 0;"></div>
+                                        <span style="font-size:0.75rem; color:var(--gray-600);">${t.month}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `);
 
-                document.getElementById('fin-plan-chart').innerHTML = `
-                    <ul style="list-style:none; display:flex; flex-direction:column; gap:0.5rem;">
-                        ${Object.keys(m.charts.revenue_by_plan).map(p => `
-                            <li style="display:flex; justify-content:space-between;"><span>${p}:</span> <strong>₹${Number(m.charts.revenue_by_plan[p]).toLocaleString('en-IN')}</strong></li>
-                        `).join('')}
-                    </ul>
-                `;
+                        setHtml('fin-aging-chart', `
+                            <ul style="list-style:none; display:flex; flex-direction:column; gap:0.5rem;">
+                                <li style="display:flex; justify-content:space-between;"><span>0–14 Days:</span> <strong>₹${Number(m.charts.overdue_aging['0-14_days']).toLocaleString('en-IN')}</strong></li>
+                                <li style="display:flex; justify-content:space-between;"><span>15–30 Days:</span> <strong>₹${Number(m.charts.overdue_aging['15-30_days']).toLocaleString('en-IN')}</strong></li>
+                                <li style="display:flex; justify-content:space-between;"><span>31–60 Days:</span> <strong>₹${Number(m.charts.overdue_aging['31-60_days']).toLocaleString('en-IN')}</strong></li>
+                                <li style="display:flex; justify-content:space-between;"><span>60+ Days:</span> <strong>₹${Number(m.charts.overdue_aging['60+_days']).toLocaleString('en-IN')}</strong></li>
+                            </ul>
+                        `);
+
+                        setHtml('fin-plan-chart', `
+                            <ul style="list-style:none; display:flex; flex-direction:column; gap:0.5rem;">
+                                ${Object.keys(m.charts.revenue_by_plan).map(p => `
+                                    <li style="display:flex; justify-content:space-between;"><span>${p}:</span> <strong>₹${Number(m.charts.revenue_by_plan[p]).toLocaleString('en-IN')}</strong></li>
+                                `).join('')}
+                            </ul>
+                        `);
+                    }
+                }
 
                 // 2. Module 1 — Users Table
-                const userTbody = document.getElementById('users-table-body');
-                userTbody.innerHTML = data.users.map(u => `
-                    <tr>
-                        <td style="font-weight:600;">${u.name}</td>
-                        <td>${u.login}</td>
-                        <td><span class="badge ${u.role === 'admin' ? 'badge-critical' : u.role === 'staff' ? 'badge-quotation' : 'badge-active'}">${u.role.toUpperCase()}</span></td>
-                        <td>${u.partner_name || 'System Contact'}</td>
-                        <td>${u.active ? '<span style="color:var(--success)">✓ Active</span>' : 'Inactive'}</td>
-                        <td style="font-size:0.8rem; color:var(--gray-600);">${u.role === 'admin' ? 'Full System Admin' : u.role === 'staff' ? 'Manage Subs & Invoices' : 'Self-Service Portal Only'}</td>
-                    </tr>
-                `).join('');
+                if (data.users) {
+                    setHtml('users-table-body', data.users.map(u => `
+                        <tr>
+                            <td style="font-weight:600;">${u.name}</td>
+                            <td>${u.login}</td>
+                            <td><span class="badge ${u.role === 'admin' ? 'badge-critical' : u.role === 'staff' ? 'badge-quotation' : 'badge-active'}">${u.role.toUpperCase()}</span></td>
+                            <td>${u.partner_name || 'System Contact'}</td>
+                            <td>${u.active ? '<span style="color:var(--success)">✓ Active</span>' : 'Inactive'}</td>
+                            <td style="font-size:0.8rem; color:var(--gray-600);">${u.role === 'admin' ? 'Full System Admin' : u.role === 'staff' ? 'Manage Subs & Invoices' : 'Self-Service Portal Only'}</td>
+                        </tr>
+                    `).join(''));
+                }
 
                 // 3. Module 2 — Products Table
-                const prdTbody = document.getElementById('products-table-body');
-                prdTbody.innerHTML = data.products.map(p => `
-                    <tr>
-                        <td style="font-weight:600;">${p.name}</td>
-                        <td>${p.type}</td>
-                        <td>₹${Number(p.base_price).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                        <td>${p.extra_price > 0 ? `+₹${p.extra_price.toLocaleString('en-IN')}` : '₹0'}</td>
-                        <td style="font-weight:700; color:var(--primary);">₹${Number(p.sales_price).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                        <td><span class="badge badge-active">Active</span></td>
-                    </tr>
-                `).join('');
+                if (data.products) {
+                    setHtml('products-table-body', data.products.map(p => `
+                        <tr>
+                            <td style="font-weight:600;">${p.name}</td>
+                            <td>${p.type}</td>
+                            <td>₹${Number(p.base_price).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td>${p.extra_price > 0 ? `+₹${p.extra_price.toLocaleString('en-IN')}` : '₹0'}</td>
+                            <td style="font-weight:700; color:var(--primary);">₹${Number(p.sales_price).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td><span class="badge badge-active">Active</span></td>
+                        </tr>
+                    `).join(''));
+                }
 
                 // Plans Table
-                const plnTbody = document.getElementById('plans-table-body');
-                plnTbody.innerHTML = data.plans.map(p => `
-                    <tr>
-                        <td style="font-weight:600;">${p.name}</td>
-                        <td><span class="badge badge-quotation">${p.billing_interval.toUpperCase()}</span></td>
-                        <td style="font-weight:700;">₹${Number(p.price).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                        <td>${p.min_quantity || 1}</td>
-                        <td>${p.pause_policy || 'Allowed'}</td>
-                        <td>${p.early_closure_policy || 'Allowed'}</td>
-                        <td><span class="badge badge-active">Active</span></td>
-                    </tr>
-                `).join('');
+                if (data.plans) {
+                    setHtml('plans-table-body', data.plans.map(p => `
+                        <tr>
+                            <td style="font-weight:600;">${p.name}</td>
+                            <td><span class="badge badge-quotation">${p.billing_interval.toUpperCase()}</span></td>
+                            <td style="font-weight:700;">₹${Number(p.price).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td>${p.min_quantity || 1}</td>
+                            <td>${p.pause_policy || 'Allowed'}</td>
+                            <td>${p.early_closure_policy || 'Allowed'}</td>
+                            <td><span class="badge badge-active">Active</span></td>
+                        </tr>
+                    `).join(''));
+                }
 
                 // Discounts Table
-                const dscTbody = document.getElementById('discounts-table-body');
-                dscTbody.innerHTML = data.discounts.map(d => `
-                    <tr>
-                        <td style="font-weight:600;">${d.name}</td>
-                        <td><code>${d.code}</code></td>
-                        <td>${d.discount_type === 'percentage' ? `${d.value}%` : `₹${d.value}`}</td>
-                        <td>${d.usage_count} / ${d.max_usage_limit || '∞'}</td>
-                        <td><span class="badge badge-active">Valid</span></td>
-                    </tr>
-                `).join('');
+                if (data.discounts) {
+                    setHtml('discounts-table-body', data.discounts.map(d => `
+                        <tr>
+                            <td style="font-weight:600;">${d.name}</td>
+                            <td><code>${d.code}</code></td>
+                            <td>${d.discount_type === 'percentage' ? `${d.value}%` : `₹${d.value}`}</td>
+                            <td>${d.usage_count} / ${d.max_usage_limit || '∞'}</td>
+                            <td><span class="badge badge-active">Valid</span></td>
+                        </tr>
+                    `).join(''));
+                }
 
                 // Taxes Table
-                const taxTbody = document.getElementById('taxes-table-body');
-                taxTbody.innerHTML = data.taxes.map(t => `
-                    <tr>
-                        <td style="font-weight:600;">${t.name}</td>
-                        <td>${t.amount}%</td>
-                        <td>${t.amount_type}</td>
-                        <td>${t.price_include ? 'Yes (Inclusive)' : 'No (Exclusive)'}</td>
-                    </tr>
-                `).join('');
+                if (data.taxes) {
+                    setHtml('taxes-table-body', data.taxes.map(t => `
+                        <tr>
+                            <td style="font-weight:600;">${t.name}</td>
+                            <td>${t.amount}%</td>
+                            <td>${t.amount_type}</td>
+                            <td>${t.price_include ? 'Yes (Inclusive)' : 'No (Exclusive)'}</td>
+                        </tr>
+                    `).join(''));
+                }
 
                 // 4. Module 3 — Subscriptions Table
-                const subTbody = document.getElementById('subs-table-body');
-                subTbody.innerHTML = data.subscriptions.map(s => `
-                    <tr>
-                        <td style="font-weight:700; font-family:'JetBrains Mono', monospace;">${s.name}</td>
-                        <td>${s.partner_name}</td>
-                        <td>${s.plan_name}</td>
-                        <td style="font-weight:700;">₹${Number(s.recurring_total).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                        <td>${s.next_renewal_date || 'N/A'}</td>
-                        <td><span class="badge badge-${s.status}">${s.status.toUpperCase()}</span></td>
-                        <td>
-                            ${s.status === 'active' ? `
-                                <button class="btn btn-outline btn-sm" onclick="subscriptionAction(${s.id}, 'pause')">Pause</button>
-                                <button class="btn btn-outline btn-sm" onclick="subscriptionAction(${s.id}, 'close')">Close</button>
-                            ` : s.status === 'paused' ? `
-                                <button class="btn btn-outline btn-sm" onclick="subscriptionAction(${s.id}, 'resume')">Resume</button>
-                            ` : s.status === 'confirmed' ? `
-                                <button class="btn btn-success btn-sm" onclick="subscriptionAction(${s.id}, 'activate')">Activate</button>
-                            ` : 'Closed'}
-                        </td>
-                    </tr>
-                `).join('');
-
-                // Quotes Table
-                const qTbody = document.getElementById('quotes-table-body');
-                qTbody.innerHTML = data.quotations.map(q => `
-                    <tr>
-                        <td style="font-weight:600;">${q.name}</td>
-                        <td>${q.partner_name}</td>
-                        <td>${q.plan_name}</td>
-                        <td>₹${Number(q.total).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                        <td><span class="badge badge-quotation">${q.status.toUpperCase()}</span></td>
-                        <td>
-                            <button class="btn btn-primary btn-sm" onclick="quotationAction(${q.id}, 'convert')">Convert to Subscription</button>
-                        </td>
-                    </tr>
-                `).join('');
-
-                // 5. Module 4 — Invoices Table
-                const invTbody = document.getElementById('invoices-table-body');
-                const paySelect = document.getElementById('pay-inv-id');
-                paySelect.innerHTML = '<option value="">-- Choose Unpaid Invoice --</option>';
-
-                invTbody.innerHTML = data.invoices.map(i => {
-                    if (i.payment_state !== 'paid') {
-                        paySelect.innerHTML += `<option value="${i.id}">${i.name} - ${i.partner_name} (Due: ₹${i.amount_residual})</option>`;
-                    }
-                    return `
+                if (data.subscriptions) {
+                    setHtml('subs-table-body', data.subscriptions.map(s => `
                         <tr>
-                            <td style="font-weight:700; font-family:'JetBrains Mono', monospace;">${i.name}</td>
-                            <td>${i.partner_name}</td>
-                            <td>${i.invoice_date_due}</td>
-                            <td style="font-weight:700;">₹${Number(i.amount_total).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                            <td style="font-weight:700; color:${i.amount_residual > 0 ? 'var(--danger)' : 'var(--success)'};">₹${Number(i.amount_residual).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                            <td><span class="badge ${i.state === 'posted' ? 'badge-active' : 'badge-draft'}">${i.state.toUpperCase()}</span></td>
-                            <td><span class="badge ${i.payment_state === 'paid' ? 'badge-active' : 'badge-critical'}">${i.payment_state.toUpperCase()}</span></td>
+                            <td style="font-weight:700; font-family:'JetBrains Mono', monospace;">${s.name}</td>
+                            <td>${s.partner_name}</td>
+                            <td>${s.plan_name}</td>
+                            <td style="font-weight:700;">₹${Number(s.recurring_total).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td>${s.next_renewal_date || 'N/A'}</td>
+                            <td><span class="badge badge-${s.status}">${s.status.toUpperCase()}</span></td>
                             <td>
-                                ${i.payment_state !== 'paid' ? `
-                                    <button class="btn btn-outline btn-sm" onclick="promptPaymentForInv(${i.id}, ${i.amount_residual})">Record Payment</button>
-                                ` : '<span style="color:var(--success); font-weight:600;">✓ Settled</span>'}
+                                ${s.status === 'active' ? `
+                                    <button class="btn btn-outline btn-sm" onclick="subscriptionAction(${s.id}, 'pause')">Pause</button>
+                                    <button class="btn btn-outline btn-sm" onclick="subscriptionAction(${s.id}, 'close')">Close</button>
+                                ` : s.status === 'paused' ? `
+                                    <button class="btn btn-outline btn-sm" onclick="subscriptionAction(${s.id}, 'resume')">Resume</button>
+                                ` : s.status === 'confirmed' ? `
+                                    <button class="btn btn-success btn-sm" onclick="subscriptionAction(${s.id}, 'activate')">Activate</button>
+                                ` : 'Closed'}
                             </td>
                         </tr>
-                    `;
-                }).join('');
+                    `).join(''));
+                }
+
+                // Quotes Table
+                if (data.quotations) {
+                    setHtml('quotes-table-body', data.quotations.map(q => `
+                        <tr>
+                            <td style="font-weight:600;">${q.name}</td>
+                            <td>${q.partner_name}</td>
+                            <td>${q.plan_name}</td>
+                            <td>₹${Number(q.total).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td><span class="badge badge-quotation">${q.status.toUpperCase()}</span></td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" onclick="quotationAction(${q.id}, 'convert')">Convert to Subscription</button>
+                            </td>
+                        </tr>
+                    `).join(''));
+                }
+
+                // 5. Module 4 — Invoices Table
+                const paySelect = document.getElementById('pay-inv-id');
+                if (paySelect) {
+                    paySelect.innerHTML = '<option value="">-- Choose Unpaid Invoice --</option>';
+                }
+
+                if (data.invoices) {
+                    setHtml('invoices-table-body', data.invoices.map(i => {
+                        if (paySelect && i.payment_state !== 'paid') {
+                            paySelect.innerHTML += `<option value="${i.id}">${i.name} - ${i.partner_name} (Due: ₹${i.amount_residual})</option>`;
+                        }
+                        return `
+                            <tr>
+                                <td style="font-weight:700; font-family:'JetBrains Mono', monospace;">${i.name}</td>
+                                <td>${i.partner_name}</td>
+                                <td>${i.invoice_date_due}</td>
+                                <td style="font-weight:700;">₹${Number(i.amount_total).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                <td style="font-weight:700; color:${i.amount_residual > 0 ? 'var(--danger)' : 'var(--success)'};">₹${Number(i.amount_residual).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                <td><span class="badge ${i.state === 'posted' ? 'badge-active' : 'badge-draft'}">${i.state.toUpperCase()}</span></td>
+                                <td><span class="badge ${i.payment_state === 'paid' ? 'badge-active' : 'badge-critical'}">${i.payment_state.toUpperCase()}</span></td>
+                                <td>
+                                    ${i.payment_state !== 'paid' ? `
+                                        <button class="btn btn-outline btn-sm" onclick="promptPaymentForInv(${i.id}, ${i.amount_residual})">Record Payment</button>
+                                    ` : '<span style="color:var(--success); font-weight:600;">✓ Settled</span>'}
+                                </td>
+                            </tr>
+                        `;
+                    }).join(''));
+                }
 
                 // Payments Table
-                const payTbody = document.getElementById('payments-full-table-body');
-                if (payTbody && data.payments) {
-                    payTbody.innerHTML = data.payments.map(p => `
+                if (data.payments) {
+                    setHtml('payments-full-table-body', data.payments.map(p => `
                         <tr>
                             <td style="font-weight:600; font-family:'JetBrains Mono', monospace;">${p.name}</td>
                             <td>${p.partner_name}</td>
@@ -1696,7 +2448,7 @@ HTML_PAGE = """<!DOCTYPE html>
                             <td><code>${p.transaction_reference}</code></td>
                             <td><span class="badge badge-active">POSTED</span></td>
                         </tr>
-                    `).join('');
+                    `).join(''));
                 }
 
                 // Populate Modal Selects (Customers and Plans)
@@ -1714,27 +2466,27 @@ HTML_PAGE = """<!DOCTYPE html>
                 });
 
                 // Guardian Cases
-                const gTbody = document.getElementById('guardian-cases-body');
-                gTbody.innerHTML = data.guardian_cases.map(c => `
-                    <tr>
-                        <td style="font-weight:600; font-family:'JetBrains Mono', monospace;">${c.name}</td>
-                        <td>${c.partner_name}</td>
-                        <td><code>${c.rule_code}</code></td>
-                        <td><span class="badge badge-${c.severity}">${c.severity.toUpperCase()}</span></td>
-                        <td style="font-weight:700;">₹${Number(c.amount_at_risk).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                        <td style="font-size:0.8rem; color:var(--gray-600);">${c.recommended_action}</td>
-                        <td><span class="badge badge-${c.state}">${c.state.toUpperCase()}</span></td>
-                        <td>${c.state === 'open' ? `<button class="btn btn-outline btn-sm" onclick="resolveGuardianCase(${c.id})">Resolve</button>` : '✓ Solved'}</td>
-                    </tr>
-                `).join('');
+                if (data.guardian_cases) {
+                    setHtml('guardian-cases-body', data.guardian_cases.map(c => `
+                        <tr>
+                            <td style="font-weight:600; font-family:'JetBrains Mono', monospace;">${c.name}</td>
+                            <td>${c.partner_name}</td>
+                            <td><code>${c.rule_code}</code></td>
+                            <td><span class="badge badge-${c.severity}">${c.severity.toUpperCase()}</span></td>
+                            <td style="font-weight:700;">₹${Number(c.amount_at_risk).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td style="font-size:0.8rem; color:var(--gray-600);">${c.recommended_action}</td>
+                            <td><span class="badge badge-${c.state}">${c.state.toUpperCase()}</span></td>
+                            <td>${c.state === 'open' ? `<button class="btn btn-outline btn-sm" onclick="resolveGuardianCase(${c.id})">Resolve</button>` : '✓ Solved'}</td>
+                        </tr>
+                    `).join(''));
+                }
 
                 currentDiscountsData = data.discounts || [];
                 currentPaymentsData = data.payments || [];
 
                 // Module 6 — Discount Rules Full Table
-                const discFullTbody = document.getElementById('discounts-full-table-body');
-                if (discFullTbody && data.discounts) {
-                    discFullTbody.innerHTML = data.discounts.map(d => `
+                if (data.discounts) {
+                    setHtml('discounts-full-table-body', data.discounts.map(d => `
                         <tr>
                             <td style="font-weight:600;">${d.name}</td>
                             <td><code>${d.code}</code></td>
@@ -1746,13 +2498,12 @@ HTML_PAGE = """<!DOCTYPE html>
                             <td>${d.start_date || 'Immediate'} → ${d.end_date || 'Permanent'}</td>
                             <td><span class="badge ${d.active ? 'badge-active' : 'badge-critical'}">${d.active ? 'ACTIVE' : 'INACTIVE'}</span></td>
                         </tr>
-                    `).join('');
+                    `).join(''));
                 }
 
                 // Module 6 — Discount Usage History
-                const discHistTbody = document.getElementById('discount-history-body');
-                if (discHistTbody && data.discount_history) {
-                    discHistTbody.innerHTML = data.discount_history.length > 0 ? data.discount_history.map(h => `
+                if (data.discount_history) {
+                    setHtml('discount-history-body', data.discount_history.length > 0 ? data.discount_history.map(h => `
                         <tr>
                             <td style="font-family:'JetBrains Mono', monospace; font-weight:600;">${h.name}</td>
                             <td>${h.discount_name}</td>
@@ -1763,22 +2514,124 @@ HTML_PAGE = """<!DOCTYPE html>
                             <td style="font-weight:700;">₹${Number(h.final_amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                             <td>${h.usage_date}</td>
                         </tr>
-                    `).join('') : '<tr><td colspan="8" style="text-align:center; color:var(--gray-600);">No discount redemptions recorded yet.</td></tr>';
+                    `).join('') : '<tr><td colspan="8" style="text-align:center; color:var(--gray-600);">No discount redemptions recorded yet.</td></tr>');
                 }
 
                 // Module 6 — Discount KPIs
-                if (document.getElementById('disc-active-count') && data.discounts) {
-                    document.getElementById('disc-active-count').innerText = data.discounts.filter(d => d.active).length;
-                    document.getElementById('disc-expired-count').innerText = data.discounts.filter(d => !d.active).length;
-                    document.getElementById('disc-redemptions-count').innerText = data.discount_history ? data.discount_history.length : 0;
+                if (data.discounts) {
+                    setTxt('disc-active-count', data.discounts.filter(d => d.active).length);
+                    setTxt('disc-expired-count', data.discounts.filter(d => !d.active).length);
+                    setTxt('disc-redemptions-count', data.discount_history ? data.discount_history.length : 0);
                     const totSaved = data.discount_history ? data.discount_history.reduce((acc, h) => acc + (h.discount_amount || 0), 0) : 0;
-                    document.getElementById('disc-value-granted').innerText = '₹' + Number(totSaved).toLocaleString('en-IN', {minimumFractionDigits: 2});
+                    setTxt('disc-value-granted', '₹' + Number(totSaved).toLocaleString('en-IN', {minimumFractionDigits: 2}));
                 }
 
-                // Module 7 — Payments Full Table
-                const payFullTbody = document.getElementById('payments-full-table-body');
-                if (payFullTbody && data.payments) {
-                    payFullTbody.innerHTML = data.payments.map(p => `
+                // Module 7 — Payment Dashboard KPIs
+                if (data.payment_metrics) {
+                    const pm = data.payment_metrics;
+                    setTxt('pay-kpi-total', '₹' + Number(pm.total_payments_received).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    setTxt('pay-kpi-today', '₹' + Number(pm.payments_today).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    setTxt('pay-kpi-month', '₹' + Number(pm.payments_this_month).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    setTxt('pay-kpi-outstanding', '₹' + Number(pm.outstanding_amount).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    setTxt('pay-kpi-overdue', '₹' + Number(pm.overdue_amount).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    setTxt('pay-kpi-reconciled', '₹' + Number(pm.reconciled_transactions_amount).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                }
+
+                // Module 8 — Charts 2, 5, 7, 8 in tab-finance
+                if (data.products) {
+                    setHtml('fin-revenue-by-product', `
+                        <ul style="list-style:none; display:flex; flex-direction:column; gap:0.5rem;">
+                            ${data.products.map(p => `
+                                <li style="display:flex; justify-content:space-between;"><span>${p.name}:</span> <strong>₹${Number(p.sales_price * (data.subscriptions ? data.subscriptions.length : 1)).toLocaleString('en-IN')}</strong></li>
+                            `).join('')}
+                        </ul>
+                    `);
+                }
+
+                if (data.subscriptions) {
+                    const actCount = data.subscriptions.filter(s => s.status === 'active').length;
+                    const pausedCount = data.subscriptions.filter(s => s.status === 'paused').length;
+                    const closedCount = data.subscriptions.filter(s => s.status === 'closed').length;
+                    setHtml('fin-active-closed-chart', `
+                        <div style="display:flex; gap:1rem; align-items:center; padding-top:0.5rem;">
+                            <div><span class="badge badge-active" style="padding:0.4rem 0.8rem; font-size:0.85rem;">Active: ${actCount}</span></div>
+                            <div><span class="badge badge-paused" style="padding:0.4rem 0.8rem; font-size:0.85rem;">Paused: ${pausedCount}</span></div>
+                            <div><span class="badge badge-closed" style="padding:0.4rem 0.8rem; font-size:0.85rem;">Closed: ${closedCount}</span></div>
+                        </div>
+                    `);
+                }
+
+                setHtml('fin-expiry-timeline', `
+                    <div style="display:flex; flex-direction:column; gap:0.4rem; font-size:0.85rem;">
+                        <div style="display:flex; justify-content:space-between;"><span>Expiring in 7 Days:</span> <strong>1 subscription</strong></div>
+                        <div style="display:flex; justify-content:space-between;"><span>Expiring in 30 Days:</span> <strong>2 subscriptions</strong></div>
+                        <div style="display:flex; justify-content:space-between;"><span>Expiring in 90+ Days:</span> <strong>1 subscription</strong></div>
+                    </div>
+                `);
+
+                if (data.payment_metrics) {
+                    const pb = data.payment_metrics.payment_method_breakdown || {};
+                    setHtml('fin-payment-methods', `
+                        <ul style="list-style:none; display:flex; flex-direction:column; gap:0.5rem;">
+                            ${Object.keys(pb).length > 0 ? Object.keys(pb).map(k => `
+                                <li style="display:flex; justify-content:space-between;"><span>${k.toUpperCase()}:</span> <strong>₹${Number(pb[k]).toLocaleString('en-IN')}</strong></li>
+                            `).join('') : '<li style="color:var(--gray-600)">No payment transactions recorded.</li>'}
+                        </ul>
+                    `);
+                }
+
+                // Module 10 — Audit Ledger
+                if (data.audit_events) {
+                    setHtml('audit-table-body', data.audit_events.map(a => `
+                        <tr>
+                            <td style="font-family:'JetBrains Mono', monospace; font-weight:700;">#${a.sequence}</td>
+                            <td><span class="badge badge-quotation">${a.event_type}</span></td>
+                            <td>${a.timestamp}</td>
+                            <td style="font-family:'JetBrains Mono', monospace; font-size:0.75rem;">${a.payload_hash ? a.payload_hash.substring(0, 20) + '...' : 'N/A'}</td>
+                            <td style="font-family:'JetBrains Mono', monospace; font-size:0.75rem;">${a.current_hash ? a.current_hash.substring(0, 20) + '...' : 'GENESIS'}</td>
+                        </tr>
+                    `).join(''));
+                }
+
+                // =============================================================
+                // POPULATE ROLE DASHBOARD 2: STAFF LAYOUT DATA
+                // =============================================================
+                if (data.quotations) {
+                    setHtml('staff-quotations-tbody', data.quotations.map(q => `
+                        <tr>
+                            <td style="font-weight:600; font-family:'JetBrains Mono', monospace;">${q.name}</td>
+                            <td>${q.partner_name}</td>
+                            <td>${q.plan_name}</td>
+                            <td style="font-weight:700;">₹${Number(q.total).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td><span class="badge badge-quotation">${q.status.toUpperCase()}</span></td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" onclick="quotationAction(${q.id}, 'convert')">Convert to Subscription</button>
+                            </td>
+                        </tr>
+                    `).join(''));
+                }
+
+                if (data.invoices) {
+                    setHtml('staff-invoices-tbody', data.invoices.map(i => `
+                        <tr>
+                            <td style="font-weight:700; font-family:'JetBrains Mono', monospace;">${i.name}</td>
+                            <td>${i.partner_name}</td>
+                            <td>${i.invoice_date_due}</td>
+                            <td style="font-weight:700;">₹${Number(i.amount_total).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td style="font-weight:700; color:${i.amount_residual > 0 ? 'var(--danger)' : 'var(--success)'};">₹${Number(i.amount_residual).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td><span class="badge ${i.state === 'posted' ? 'badge-active' : 'badge-draft'}">${i.state.toUpperCase()}</span></td>
+                            <td><span class="badge ${i.payment_state === 'paid' ? 'badge-active' : 'badge-critical'}">${i.payment_state.toUpperCase()}</span></td>
+                            <td>
+                                ${i.payment_state !== 'paid' ? `
+                                    <button class="btn btn-outline btn-sm" onclick="promptPaymentForInv(${i.id}, ${i.amount_residual})">Record Payment</button>
+                                ` : '<span style="color:var(--success); font-weight:600;">✓ Settled</span>'}
+                            </td>
+                        </tr>
+                    `).join(''));
+                }
+
+                if (data.payments) {
+                    setHtml('staff-payments-tbody', data.payments.map(p => `
                         <tr>
                             <td style="font-weight:700; font-family:'JetBrains Mono', monospace;">${p.name}</td>
                             <td>${p.partner_name}</td>
@@ -1789,81 +2642,118 @@ HTML_PAGE = """<!DOCTYPE html>
                             <td><code>${p.transaction_reference}</code></td>
                             <td><span class="badge badge-active">POSTED</span></td>
                         </tr>
-                    `).join('');
+                    `).join(''));
                 }
 
-                // Module 7 — Payment Dashboard KPIs
-                if (data.payment_metrics) {
-                    const pm = data.payment_metrics;
-                    if (document.getElementById('pay-kpi-total')) document.getElementById('pay-kpi-total').innerText = '₹' + Number(pm.total_payments_received).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                    if (document.getElementById('pay-kpi-today')) document.getElementById('pay-kpi-today').innerText = '₹' + Number(pm.payments_today).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                    if (document.getElementById('pay-kpi-month')) document.getElementById('pay-kpi-month').innerText = '₹' + Number(pm.payments_this_month).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                    if (document.getElementById('pay-kpi-outstanding')) document.getElementById('pay-kpi-outstanding').innerText = '₹' + Number(pm.outstanding_amount).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                    if (document.getElementById('pay-kpi-overdue')) document.getElementById('pay-kpi-overdue').innerText = '₹' + Number(pm.overdue_amount).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                    if (document.getElementById('pay-kpi-reconciled')) document.getElementById('pay-kpi-reconciled').innerText = '₹' + Number(pm.reconciled_transactions_amount).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                }
-
-                // Module 8 — Charts 2, 5, 7, 8 in tab-finance
-                if (document.getElementById('fin-revenue-by-product') && data.products) {
-                    document.getElementById('fin-revenue-by-product').innerHTML = `
-                        <ul style="list-style:none; display:flex; flex-direction:column; gap:0.5rem;">
-                            ${data.products.map(p => `
-                                <li style="display:flex; justify-content:space-between;"><span>${p.name}:</span> <strong>₹${Number(p.sales_price * (data.subscriptions ? data.subscriptions.length : 1)).toLocaleString('en-IN')}</strong></li>
-                            `).join('')}
-                        </ul>
-                    `;
-                }
-
-                if (document.getElementById('fin-active-closed-chart') && data.subscriptions) {
-                    const actCount = data.subscriptions.filter(s => s.status === 'active').length;
-                    const pausedCount = data.subscriptions.filter(s => s.status === 'paused').length;
-                    const closedCount = data.subscriptions.filter(s => s.status === 'closed').length;
-                    document.getElementById('fin-active-closed-chart').innerHTML = `
-                        <div style="display:flex; gap:1rem; align-items:center; padding-top:0.5rem;">
-                            <div><span class="badge badge-active" style="padding:0.4rem 0.8rem; font-size:0.85rem;">Active: ${actCount}</span></div>
-                            <div><span class="badge badge-paused" style="padding:0.4rem 0.8rem; font-size:0.85rem;">Paused: ${pausedCount}</span></div>
-                            <div><span class="badge badge-closed" style="padding:0.4rem 0.8rem; font-size:0.85rem;">Closed: ${closedCount}</span></div>
-                        </div>
-                    `;
-                }
-
-                if (document.getElementById('fin-expiry-timeline')) {
-                    document.getElementById('fin-expiry-timeline').innerHTML = `
-                        <div style="display:flex; flex-direction:column; gap:0.4rem; font-size:0.85rem;">
-                            <div style="display:flex; justify-content:space-between;"><span>Expiring in 7 Days:</span> <strong>1 subscription</strong></div>
-                            <div style="display:flex; justify-content:space-between;"><span>Expiring in 30 Days:</span> <strong>2 subscriptions</strong></div>
-                            <div style="display:flex; justify-content:space-between;"><span>Expiring in 90+ Days:</span> <strong>1 subscription</strong></div>
-                        </div>
-                    `;
-                }
-
-                if (document.getElementById('fin-payment-methods') && data.payment_metrics) {
-                    const pb = data.payment_metrics.payment_method_breakdown || {};
-                    document.getElementById('fin-payment-methods').innerHTML = `
-                        <ul style="list-style:none; display:flex; flex-direction:column; gap:0.5rem;">
-                            ${Object.keys(pb).length > 0 ? Object.keys(pb).map(k => `
-                                <li style="display:flex; justify-content:space-between;"><span>${k.toUpperCase()}:</span> <strong>₹${Number(pb[k]).toLocaleString('en-IN')}</strong></li>
-                            `).join('') : '<li style="color:var(--gray-600)">No payment transactions recorded.</li>'}
-                        </ul>
-                    `;
-                }
-
-                // Module 10 — Audit Ledger
-                const auditTbody = document.getElementById('audit-table-body');
-                if (auditTbody && data.audit_events) {
-                    auditTbody.innerHTML = data.audit_events.map(a => `
+                if (data.guardian_cases) {
+                    setHtml('staff-guardian-tbody', data.guardian_cases.map(c => `
                         <tr>
-                            <td style="font-family:'JetBrains Mono', monospace; font-weight:700;">#${a.sequence}</td>
-                            <td><span class="badge badge-quotation">${a.event_type}</span></td>
-                            <td>${a.timestamp}</td>
-                            <td style="font-family:'JetBrains Mono', monospace; font-size:0.75rem;">${a.payload_hash ? a.payload_hash.substring(0, 20) + '...' : 'N/A'}</td>
-                            <td style="font-family:'JetBrains Mono', monospace; font-size:0.75rem;">${a.current_hash ? a.current_hash.substring(0, 20) + '...' : 'GENESIS'}</td>
+                            <td style="font-weight:600; font-family:'JetBrains Mono', monospace;">${c.name}</td>
+                            <td>${c.partner_name}</td>
+                            <td><code>${c.rule_code}</code></td>
+                            <td><span class="badge badge-${c.severity}">${c.severity.toUpperCase()}</span></td>
+                            <td style="font-weight:700;">₹${Number(c.amount_at_risk).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td style="font-size:0.8rem; color:var(--gray-600);">${c.recommended_action}</td>
+                            <td><span class="badge badge-${c.state}">${c.state.toUpperCase()}</span></td>
+                            <td>${c.state === 'open' ? `<button class="btn btn-outline btn-sm" onclick="resolveGuardianCase(${c.id})">Resolve</button>` : '✓ Solved'}</td>
                         </tr>
-                    `).join('');
+                    `).join(''));
+                }
+
+                if (data.users) {
+                    setHtml('staff-customers-tbody', data.users.filter(u => u.role === 'customer').map(u => `
+                        <tr>
+                            <td style="font-weight:700;">${u.partner_name || u.name}</td>
+                            <td>${u.login}</td>
+                            <td><span class="badge role-badge-customer">Customer Organization</span></td>
+                            <td><span class="badge ${u.active ? 'badge-active' : 'badge-critical'}">${u.active ? 'ACTIVE' : 'INACTIVE'}</span></td>
+                        </tr>
+                    `).join(''));
+                }
+
+                // =============================================================
+                // POPULATE ROLE DASHBOARD 3: CUSTOMER PORTAL DATA (ISOLATED)
+                // =============================================================
+                if (CURRENT_USER) {
+                    const myPartnerId = CURRENT_USER.partner_id;
+                    const myName = CURRENT_USER.partner_name || CURRENT_USER.name;
+
+                    const mySubs = (data.subscriptions || []).filter(s => (myPartnerId && s.partner_id === myPartnerId) || s.partner_name === myName);
+                    const myInvs = (data.invoices || []).filter(i => (myPartnerId && i.partner_id === myPartnerId) || i.partner_name === myName);
+                    const myPayments = (data.payments || []).filter(p => (myPartnerId && p.partner_id === myPartnerId) || p.partner_name === myName);
+
+                    // Profile & Welcome Information
+                    setTxt('cust-welcome-title', `Welcome back, ${CURRENT_USER.name}!`);
+                    setTxt('cust-welcome-org', CURRENT_USER.partner_name || CURRENT_USER.name);
+                    setTxt('cust-profile-name', CURRENT_USER.name);
+                    setTxt('cust-profile-email', CURRENT_USER.login);
+                    setTxt('cust-profile-company', CURRENT_USER.partner_name || 'Independent Client');
+
+                    // Customer KPIs
+                    const totalOutstanding = myInvs.reduce((acc, i) => acc + (parseFloat(i.amount_residual) || 0), 0);
+                    const totalMrr = mySubs.reduce((acc, s) => acc + (parseFloat(s.recurring_total) || 0), 0);
+                    const firstRenewal = (mySubs.length > 0 && mySubs[0].next_renewal_date) ? mySubs[0].next_renewal_date : 'N/A';
+                    const firstPlan = (mySubs.length > 0) ? mySubs[0].plan_name : 'No Active Plan';
+
+                    setTxt('cust-kpi-subs', `${mySubs.length} Active`);
+                    setTxt('cust-kpi-planname', firstPlan);
+                    setTxt('cust-kpi-mrr', '₹' + Number(totalMrr).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    setTxt('cust-kpi-renewal', firstRenewal);
+                    setTxt('cust-kpi-outstanding', '₹' + Number(totalOutstanding).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+
+                    // Customer Subscriptions Table
+                    setHtml('cust-subs-tbody', mySubs.length > 0 ? mySubs.map(s => `
+                        <tr>
+                            <td style="font-weight:700; font-family:'JetBrains Mono', monospace;">${s.name}</td>
+                            <td>${s.plan_name}</td>
+                            <td style="font-weight:700;">₹${Number(s.recurring_total).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td>${s.next_renewal_date || 'N/A'}</td>
+                            <td><span class="badge badge-${s.status}">${s.status.toUpperCase()}</span></td>
+                            <td>
+                                ${s.status === 'active' ? `
+                                    <button class="btn btn-outline btn-sm" onclick="subscriptionAction(${s.id}, 'pause')">Pause</button>
+                                    <button class="btn btn-outline btn-sm" onclick="subscriptionAction(${s.id}, 'close')">Close</button>
+                                ` : s.status === 'paused' ? `
+                                    <button class="btn btn-outline btn-sm" onclick="subscriptionAction(${s.id}, 'resume')">Resume</button>
+                                ` : '<span style="color:var(--gray-600)">No actions</span>'}
+                            </td>
+                        </tr>
+                    `).join('') : '<tr><td colspan="6" style="text-align:center; color:var(--gray-600); padding:1.5rem;">No active subscriptions found for your account.</td></tr>');
+
+                    // Customer Invoices Table
+                    setHtml('cust-invoices-tbody', myInvs.length > 0 ? myInvs.map(i => `
+                        <tr>
+                            <td style="font-weight:700; font-family:'JetBrains Mono', monospace;">${i.name}</td>
+                            <td>${i.invoice_date_due}</td>
+                            <td style="font-weight:700;">₹${Number(i.amount_total).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td style="font-weight:700; color:${i.amount_residual > 0 ? 'var(--danger)' : 'var(--success)'};">₹${Number(i.amount_residual).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td><span class="badge ${i.payment_state === 'paid' ? 'badge-active' : 'badge-critical'}">${i.payment_state.toUpperCase()}</span></td>
+                            <td><button class="btn btn-outline btn-sm" onclick="showToast('⬇️ Downloading Invoice Receipt PDF...')">📄 Receipt</button></td>
+                            <td>
+                                ${i.payment_state !== 'paid' ? `
+                                    <button class="btn btn-primary btn-sm" onclick="paySpecificInvoice(${i.id}, ${i.amount_residual})">Pay Now →</button>
+                                ` : '<span style="color:var(--success); font-weight:700;">✓ Settled</span>'}
+                            </td>
+                        </tr>
+                    `).join('') : '<tr><td colspan="7" style="text-align:center; color:var(--gray-600); padding:1.5rem;">No invoices generated for your account yet.</td></tr>');
+
+                    // Populate Customer Invoice Payment Select
+                    const custPaySel = document.getElementById('cust-pay-invoice-select');
+                    if (custPaySel) {
+                        const unpaid = myInvs.filter(i => i.payment_state !== 'paid');
+                        if (unpaid.length === 0) {
+                            custPaySel.innerHTML = '<option value="">All invoices are fully settled!</option>';
+                            const custPayAmt = document.getElementById('cust-pay-amount');
+                            if (custPayAmt) custPayAmt.value = 0;
+                        } else {
+                            custPaySel.innerHTML = unpaid.map(i => `<option value="${i.id}" data-residual="${i.amount_residual}">${i.name} - Due: ₹${Number(i.amount_residual).toLocaleString('en-IN')}</option>`).join('');
+                            autoFillCustInvoiceResidual();
+                        }
+                    }
                 }
 
             } catch (e) {
-                console.error("Failed to load state:", e);
+                console.error("Failed to load master state:", e);
             }
         }
 
@@ -1873,10 +2763,14 @@ HTML_PAGE = """<!DOCTYPE html>
             const login = document.getElementById('usr-email').value;
             const role = document.getElementById('usr-role').value;
             const password = document.getElementById('usr-pwd').value;
+            const callerRole = (CURRENT_USER && CURRENT_USER.role) ? CURRENT_USER.role : '';
             const res = await fetch('/api/users/add', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({name, login, role, password})
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Role': callerRole
+                },
+                body: JSON.stringify({name, login, role, password, requester_role: callerRole})
             });
             const d = await res.json();
             if (d.error) { alert('Validation Error: ' + d.error); return; }
@@ -2306,16 +3200,36 @@ HTML_PAGE = """<!DOCTYPE html>
         }
 
         // Explicit tab click listener attachment
-        document.querySelectorAll('.nav-tab').forEach(function(tab) {
+        document.querySelectorAll('.nav-tab[data-tab]').forEach(function(tab) {
             tab.addEventListener('click', function(e) {
                 const tid = this.getAttribute('data-tab');
                 if (tid) switchTab(tid, this);
             });
         });
 
-        // Init
-        fetchAllData();
-        setInterval(fetchAllData, 6000);
+        document.querySelectorAll('.nav-tab[data-staff-tab]').forEach(function(tab) {
+            tab.addEventListener('click', function(e) {
+                const tid = this.getAttribute('data-staff-tab');
+                if (tid) switchStaffTab(tid, this);
+            });
+        });
+
+        document.querySelectorAll('.nav-tab[data-cust-tab]').forEach(function(tab) {
+            tab.addEventListener('click', function(e) {
+                const tid = this.getAttribute('data-cust-tab');
+                if (tid) switchCustomerTab(tid, this);
+            });
+        });
+
+        // Browser history popstate handling
+        window.addEventListener('popstate', function(e) {
+            routeTo(window.location.pathname, false);
+        });
+
+        // Application Startup & Initial Route Determination
+        const initialPath = window.location.pathname;
+        routeTo(initialPath, false);
+        setInterval(fetchAllData, 8000);
     </script>
 </body>
 </html>
@@ -2348,7 +3262,8 @@ class MasterServerHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urllib.parse.urlparse(self.path).path
-        if path == '/' or path == '/subscriptiq':
+        app_routes = ['/', '/subscriptiq', '/login', '/register', '/admin/dashboard', '/staff/dashboard', '/customer/dashboard']
+        if path in app_routes:
             encoded = HTML_PAGE.encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
@@ -2449,9 +3364,11 @@ class MasterServerHandler(BaseHTTPRequestHandler):
                 pl = s.subscriptiq_plan_id or s.plan_id
                 pl_name = pl.name if hasattr(pl, 'name') else 'Plan'
                 cust = s.partner_id.name if hasattr(s.partner_id, 'name') else 'Customer'
+                p_id = s.partner_id.id if hasattr(s.partner_id, 'id') else s.partner_id
                 subs.append({
                     'id': s.id,
                     'name': s.name,
+                    'partner_id': p_id,
                     'partner_name': cust,
                     'plan_name': pl_name,
                     'recurring_total': getattr(s, 'subscriptiq_recurring_total', getattr(s, 'recurring_total', 1200.0)),
@@ -2465,9 +3382,11 @@ class MasterServerHandler(BaseHTTPRequestHandler):
                 pl = q.subscriptiq_plan_id or q.plan_id
                 pl_name = pl.name if hasattr(pl, 'name') else 'Plan'
                 cust = q.partner_id.name if hasattr(q.partner_id, 'name') else 'Customer'
+                p_id = q.partner_id.id if hasattr(q.partner_id, 'id') else q.partner_id
                 quotes.append({
                     'id': q.id,
                     'name': q.name,
+                    'partner_id': p_id,
                     'partner_name': cust,
                     'plan_name': pl_name,
                     'total': getattr(q, 'amount_total', 1416.0),
@@ -2478,9 +3397,11 @@ class MasterServerHandler(BaseHTTPRequestHandler):
             invoices = []
             for inv in GLOBAL_ENV['account.move'].search([('move_type', '=', 'out_invoice')]):
                 cust = inv.partner_id.name if hasattr(inv.partner_id, 'name') else 'Customer'
+                p_id = inv.partner_id.id if hasattr(inv.partner_id, 'id') else inv.partner_id
                 invoices.append({
                     'id': inv.id,
                     'name': inv.name,
+                    'partner_id': p_id,
                     'partner_name': cust,
                     'invoice_date_due': str(inv.invoice_date_due or ''),
                     'amount_total': float(inv.amount_total),
@@ -2494,9 +3415,11 @@ class MasterServerHandler(BaseHTTPRequestHandler):
             for p in GLOBAL_ENV['account.payment'].search([]):
                 cust = p.partner_id.name if hasattr(p.partner_id, 'name') else 'Customer'
                 inv = p.invoice_id.name if hasattr(p.invoice_id, 'name') else 'Invoice'
+                p_id = p.partner_id.id if hasattr(p.partner_id, 'id') else p.partner_id
                 payments.append({
                     'id': p.id,
                     'name': p.name,
+                    'partner_id': p_id,
                     'partner_name': cust,
                     'invoice_name': inv,
                     'payment_method': p.payment_method,
@@ -2625,14 +3548,55 @@ class MasterServerHandler(BaseHTTPRequestHandler):
             params = {}
 
         try:
-            if path == '/api/users/add':
-                u = ResUsers.create_user(GLOBAL_ENV, params)
-                self.send_json({'success': True, 'user_id': u.id})
+            if path == '/api/auth/login':
+                login = params.get('login', '').strip().lower()
+                password = params.get('password', '')
+                user = ResUsers.authenticate(GLOBAL_ENV, login, password)
+                if not user:
+                    self.send_json({'success': False, 'error': 'Invalid email or password.'}, status=401)
+                else:
+                    p_id = user.partner_id.id if hasattr(user.partner_id, 'id') else user.partner_id
+                    p_name = user.partner_id.name if hasattr(user.partner_id, 'name') else user.name
+                    self.send_json({
+                        'success': True,
+                        'user': {
+                            'id': user.id,
+                            'name': user.name,
+                            'login': user.login,
+                            'role': user.role,
+                            'partner_id': p_id,
+                            'partner_name': p_name
+                        }
+                    })
 
-            elif path == '/api/users/register':
+            elif path == '/api/auth/register' or path == '/api/users/register':
                 params['role'] = 'customer'
                 u = ResUsers.create_user(GLOBAL_ENV, params)
-                self.send_json({'success': True, 'user_id': u.id})
+                p_id = u.partner_id.id if hasattr(u.partner_id, 'id') else u.partner_id
+                p_name = u.partner_id.name if hasattr(u.partner_id, 'name') else u.name
+                self.send_json({
+                    'success': True,
+                    'user_id': u.id,
+                    'user': {
+                        'id': u.id,
+                        'name': u.name,
+                        'login': u.login,
+                        'role': 'customer',
+                        'partner_id': p_id,
+                        'partner_name': p_name
+                    }
+                })
+
+            elif path == '/api/auth/logout':
+                self.send_json({'success': True, 'message': 'Successfully logged out.'})
+
+            elif path == '/api/users/add':
+                caller_role = self.headers.get('X-User-Role') or params.get('requester_role', 'admin')
+                if caller_role != 'admin':
+                    self.send_json({'error': 'Access Denied: Only Administrators can create staff accounts.'}, status=403)
+                else:
+                    u = ResUsers.create_user(GLOBAL_ENV, params)
+                    self.send_json({'success': True, 'user_id': u.id})
 
             elif path == '/api/users/reset':
                 email = params.get('email', '')
