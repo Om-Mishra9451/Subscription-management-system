@@ -17,6 +17,3 @@ from web_server import MasterServerHandler
 # Vercel Python runtime detects BaseHTTPRequestHandler subclasses named `handler`
 class handler(MasterServerHandler):
     pass
-
-# Expose app for WSGI compatibility if needed
-app = handler

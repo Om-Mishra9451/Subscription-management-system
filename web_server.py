@@ -3288,14 +3288,24 @@ class MasterServerHandler(BaseHTTPRequestHandler):
         self.send_header('Connection', 'close')
         self.end_headers()
 
+    def get_path_and_query(self):
+        raw = self.headers.get('x-matched-path') or self.headers.get('x-forwarded-uri') or self.headers.get('x-real-path')
+        if not raw:
+            raw = self.path
+        parsed = urllib.parse.urlparse(raw)
+        path = parsed.path
+        if path in ['/api/index.py', '/api/index', '/api']:
+            path = '/'
+        return path, parsed.query
+
     def do_GET(self):
-        path = urllib.parse.urlparse(self.path).path
-        app_routes = ['/', '/subscriptiq', '/login', '/register', '/admin/dashboard', '/staff/dashboard', '/customer/dashboard']
-        if path in app_routes:
+        path, query_str = self.get_path_and_query()
+        if not path.startswith('/api') and not path.startswith('/subscriptiq/copilot'):
             encoded = HTML_PAGE.encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             self.send_header('Content-Length', str(len(encoded)))
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Connection', 'close')
             self.end_headers()
             self.wfile.write(encoded)
@@ -3567,7 +3577,7 @@ class MasterServerHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def do_POST(self):
-        path = urllib.parse.urlparse(self.path).path
+        path, _ = self.get_path_and_query()
         length = int(self.headers.get('Content-Length', 0))
         body = self.rfile.read(length).decode('utf-8') if length > 0 else '{}'
         try:
