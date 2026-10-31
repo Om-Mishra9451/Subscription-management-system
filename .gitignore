@@ -45,3 +45,4 @@ temp_data/
 .idea/
 .vscode/
 *.swp
+.vercel
