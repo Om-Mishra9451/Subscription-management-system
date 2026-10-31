@@ -261,6 +261,8 @@ except ImportError:
         def __getattr__(self, name):
             if hasattr(self._model_cls, name):
                 attr = getattr(self._model_cls, name)
+                if isinstance(attr, property):
+                    return attr.fget(self)
                 if callable(attr):
                     import functools
                     return functools.partial(attr, self)

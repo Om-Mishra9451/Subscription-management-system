@@ -51,46 +51,85 @@ class SaleOrder(models.Model):
                 subtotal = float(getattr(order, 'recurring_total', 0.0) or 0.0)
             order.recurring_total = max(0.0, subtotal - float(getattr(order, 'applied_discount_amount', 0.0) or 0.0))
 
+    def action_quotation_send(self):
+        """Transitions Draft -> Quotation."""
+        for order in self:
+            order.write({'subscriptiq_status': 'quotation', 'state': 'sent'})
+        return True
+
+    def action_confirm(self):
+        """Transitions Quotation -> Confirmed."""
+        for order in self:
+            order.write({'subscriptiq_status': 'confirmed', 'state': 'sale'})
+        return True
+
+    def action_activate_subscription(self):
+        """Transitions Confirmed -> Active."""
+        for order in self:
+            plan = order.subscriptiq_plan_id or order.plan_id
+            if isinstance(plan, int):
+                plan = self.env['subscriptiq.plan'].browse(plan)
+            interval = getattr(plan, 'billing_interval', 'monthly') if plan else 'monthly'
+            today = fields.Date.today()
+            if interval == 'daily':
+                next_ren = datetime.date.fromisoformat(str(today)[:10]) + datetime.timedelta(days=1)
+            elif interval == 'weekly':
+                next_ren = datetime.date.fromisoformat(str(today)[:10]) + datetime.timedelta(weeks=1)
+            elif interval == 'yearly':
+                next_ren = datetime.date.fromisoformat(str(today)[:10]) + datetime.timedelta(days=365)
+            else:
+                next_ren = datetime.date.fromisoformat(str(today)[:10]) + datetime.timedelta(days=30)
+
+            order.write({
+                'subscriptiq_status': 'active',
+                'stage': 'in_progress',
+                'subscription_code': getattr(order, 'subscription_code', False) or f"SUB/{order.id:05d}",
+                'subscriptiq_next_renewal_date': str(next_ren),
+                'next_renewal_date': str(next_ren),
+                'next_invoice_date': str(next_ren)
+            })
+        return True
+
     def action_confirm_subscription(self):
         """Converts draft quotation into confirmed/active subscription."""
-        for order in self:
-            if order.is_subscription:
-                if not order.plan_id:
-                    raise UserError("Cannot activate subscription without a designated subscription plan.")
-                order.write({
-                    'stage': 'in_progress',
-                    'subscription_code': order.subscription_code or f"SUB/{order.id:05d}",
-                    'next_invoice_date': order.next_invoice_date or order.start_date or fields.Date.today()
-                })
-        return True
+        self.action_confirm()
+        return self.action_activate_subscription()
 
     def action_pause(self):
         """Pauses active subscription and suspends billing cycle."""
         for order in self:
-            plan = order.plan_id
+            plan = order.subscriptiq_plan_id or order.plan_id
             if isinstance(plan, int):
                 plan = self.env['subscriptiq.plan'].browse(plan)
             if plan and getattr(plan, 'pause_policy', '') == 'disallowed':
                 raise UserError(f"Subscription plan '{plan.name}' strictly disallows pausing.")
-            order.write({'stage': 'paused'})
+            order.write({'subscriptiq_status': 'paused', 'stage': 'paused'})
         return True
 
     def action_resume(self):
         """Resumes a paused subscription."""
         for order in self:
-            order.write({'stage': 'in_progress'})
+            order.write({'subscriptiq_status': 'active', 'stage': 'in_progress'})
+        return True
+
+    def action_close(self, early=False, reason=""):
+        """Closes subscription (Active -> Closed)."""
+        for order in self:
+            plan = order.subscriptiq_plan_id or order.plan_id
+            if isinstance(plan, int):
+                plan = self.env['subscriptiq.plan'].browse(plan)
+            if early and plan and getattr(plan, 'early_closure_policy', '') == 'disallowed':
+                raise UserError(f"Subscription plan '{plan.name}' disallows early termination without manager approval.")
+            order.write({
+                'subscriptiq_status': 'closed',
+                'stage': 'closed',
+                'end_date': fields.Date.today()
+            })
         return True
 
     def action_early_close(self, reason="Customer requested early cancellation"):
         """Safely closes subscription prior to term expiry."""
-        for order in self:
-            plan = order.plan_id
-            if isinstance(plan, int):
-                plan = self.env['subscriptiq.plan'].browse(plan)
-            if plan and getattr(plan, 'early_closure_policy', '') == 'disallowed':
-                raise UserError(f"Subscription plan '{plan.name}' disallows early termination without manager approval.")
-            order.write({'stage': 'closed', 'end_date': fields.Date.today()})
-        return True
+        return self.action_close(early=True, reason=reason)
 
     def action_renew(self, extension_days=30):
         """Renews an active or expiring subscription."""

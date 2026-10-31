@@ -79,6 +79,14 @@ class BillingProtectionEngine:
         _logger.info("Billing reservation %s successfully committed to invoice %s", reservation.id, invoice.id)
 
     @classmethod
+    def commit_billing_slot(cls, env, guard_key: str, invoice_id: int):
+        """Finds reservation by guard key and commits to invoice."""
+        guards = env['subscriptiq.billing.guard'].search([('idempotency_key', '=', guard_key)])
+        if guards:
+            inv = env['account.move'].browse(invoice_id) if isinstance(invoice_id, int) else invoice_id
+            cls.commit_billing_invoice(guards[0], inv)
+
+    @classmethod
     def release_billing_reservation(cls, reservation, reason="Invoice generation aborted"):
         """
         Rolls back the reservation if invoice generation encounters an error or is rolled back.
